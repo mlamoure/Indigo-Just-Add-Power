@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<PluginConfig>
+	<SupportURL>https://github.com/mlamoure/</SupportURL>
+
+			<Field hidden="false" type="checkbox" id="debug"><Label>Debug (will produce a lot of log data)</Label><Description></Description></Field>
+
+</PluginConfig>

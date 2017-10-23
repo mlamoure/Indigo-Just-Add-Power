@@ -1,0 +1,174 @@
+<?xml version="1.0"?>
+<!-- If your plugin defines device types, you can define them here.
+
+	 Devices must specify their type (via the type attribute):
+
+		relay (ON/OFF/STATUS)
+		dimmer (ON/OFF/DIM/BRIGHTEN/SET BRIGHTNESS/STATUS)
+		speedcontrol (ON/OFF/SET SPEED LEVEL/SET SPEED INDEX/INCREASE/DECREASE/STATUS)
+		sensor (ON/OFF/STATUS)
+		thermostat
+		sprinkler
+		custom
+
+	 The first six inherit states, actions and events from Indigo. You can
+	 also specify your own custom actions and additional states, if needed.
+
+	 The two Device examples below specify the relay and dimmer types.
+
+	 Devices must also specify a unique typeID - so, for instance, if you define
+	 2 relay type devices then your plugin can distinguish between the two by
+	 the typeID.
+-->
+
+<Devices>
+	<Device type="custom" id="matrix">
+		<Name>JAP Matrix Switch</Name>
+		<ConfigUI>
+
+			<Field id="ip" type="textfield">
+				<Label>Matrix IP:</Label>
+			</Field>
+
+			<Field type="menu" id="Model" defaultValue="ciscosg300">
+				<Label>Model:</Label>
+				<List>
+					<Option value="ciscosg300">Cisco SG300</Option>
+					<Option value="ciscosg500">Cisco SG500</Option>
+					<Option value="luxl">Luxul (not yet implemented)</Option>
+				</List>
+			</Field>
+
+			<Field id="Login" type="textfield" defaultValue="cisco">
+				<Label>Switch Login:</Label>
+			</Field>
+
+			<Field id="Password" type="textfield" defaultValue="cisco">
+				<Label>Switch Password:</Label>
+			</Field>
+
+			<Field id="ControlVLAN" type="textfield" defaultValue="2">
+				<Label>Control VLAN:</Label>
+			</Field>
+
+		</ConfigUI>
+		<States>
+			<State id="connectionState">
+		        <ValueType boolType="TrueFalse">Boolean</ValueType>
+		        <TriggerLabel>Connection State</TriggerLabel>
+		        <ControlPageLabel>Connection State</ControlPageLabel>
+		    </State>			
+			<State id="connectionState_ui">
+		        <ValueType>String</ValueType>
+		        <TriggerLabel>Connection State</TriggerLabel>
+		        <ControlPageLabel>Connection State</ControlPageLabel>
+		    </State>			
+    	</States>
+	</Device>
+	<Device type="custom" id="transmitter">
+		<Name>JAP Transmitter</Name>
+		<ConfigUI>
+
+			<Field type="menu" id="matrix">
+				<Label>Matrix:</Label>
+				<List class="self" method="availableMatrix"/>
+			</Field>
+
+			<Field type="menu" id="vlan" defaultValue="11">
+				<Label>Transmitter No:</Label>
+				<List>
+					<Option value="11">1</Option>
+					<Option value="12">2</Option>
+					<Option value="13">3</Option>
+					<Option value="14">4</Option>
+					<Option value="15">5</Option>
+					<Option value="16">6</Option>
+					<Option value="17">7</Option>
+					<Option value="18">8</Option>
+					<Option value="19">19</Option>
+					<Option value="20">10</Option>
+					<Option value="21">11</Option>
+					<Option value="22">12</Option>
+					<Option value="23">13</Option>
+					<Option value="24">14</Option>
+					<Option value="25">15</Option>
+					<Option value="26">16</Option>
+					<Option value="27">17</Option>
+					<Option value="28">18</Option>
+					<Option value="29">19</Option>
+					<Option value="30">20</Option>
+				</List>
+			</Field>
+
+			<Field id="ip" type="textfield">
+				<Label>Tx IP:</Label>
+			</Field>
+
+
+		</ConfigUI>
+		<States>
+			<State id="being_watched">
+		        <ValueType>String</ValueType>
+		        <TriggerLabel>Being watched by</TriggerLabel>
+		        <ControlPageLabel>Being watched by</ControlPageLabel>
+		    </State>			
+			<State id="being_watched_ui">
+		        <ValueType>String</ValueType>
+		        <TriggerLabel>Being watched by</TriggerLabel>
+		        <ControlPageLabel>Being watched by</ControlPageLabel>
+		    </State>			
+    	</States>
+	</Device>
+	<Device type="custom" id="receiver">
+		<Name>JAP Receiver</Name>
+		<ConfigUI>
+			<Field type="menu" id="matrix">
+				<Label>Matrix:</Label>
+				<List class="self" method="availableMatrix"/>
+			</Field>
+
+			<Field type="menu" id="no" defaultValue="1">
+				<Label>Receiver No:</Label>
+				<List>
+					<Option value="1">1</Option>
+					<Option value="2">2</Option>
+					<Option value="3">3</Option>
+					<Option value="4">4</Option>
+					<Option value="5">5</Option>
+					<Option value="6">6</Option>
+					<Option value="7">7</Option>
+					<Option value="8">8</Option>
+					<Option value="9">19</Option>
+					<Option value="10">10</Option>
+					<Option value="11">11</Option>
+					<Option value="12">12</Option>
+					<Option value="13">13</Option>
+					<Option value="14">14</Option>
+					<Option value="15">15</Option>
+					<Option value="16">16</Option>
+					<Option value="17">17</Option>
+					<Option value="18">18</Option>
+					<Option value="19">19</Option>
+					<Option value="20">20</Option>
+				</List>
+			</Field>
+
+			<Field id="ip" type="textfield">
+				<Label>Rx IP:</Label>
+			</Field>
+
+		</ConfigUI>
+		<States>
+			<State id="vlan_watching">
+		        <ValueType>String</ValueType>
+		        <TriggerLabel>VLAN Watching</TriggerLabel>
+		        <ControlPageLabel>VLAN Watching</ControlPageLabel>
+		    </State>			
+			<State id="vlan_watching_ui">
+		        <ValueType>String</ValueType>
+		        <TriggerLabel>VLAN Watching</TriggerLabel>
+		        <ControlPageLabel>VLAN Watching</ControlPageLabel>
+		    </State>			
+    	</States>
+	</Device>
+</Devices>
