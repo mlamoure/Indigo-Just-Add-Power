@@ -9,7 +9,7 @@ JAP Matrix with a Cisco Switch.  Luxul switches are not supported yet.
 * Action for switching a Rx to a different Transmitter (VLAN)
 * Action for enabling and disabling image pull on a Tx or Rx
 * Action for rebooting a switch
-* Action for rebotting a JAP device
+* Action for rebooting a JAP device
 * A maintained list of Indigo variables with the URL to obtain a image pull from each Tx and Rx
 
 # Install Notes #
@@ -22,7 +22,7 @@ JAP Matrix with a Cisco Switch.  Luxul switches are not supported yet.
 | State                | Type    | Description                                                                                                                                                                                                                  |
 |:---------------------|:--------|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | vlan_watching       | String  | (Rx only) Contains the VLAN no. of the Tx that the Receiver is watching.                                                                                       |
-| being_watched       | String  | (Tx only) Contains a list of Rx numbers that are watching that transmitter, seperated by commas.                                                                                       |
+| being_watched       | String  | (Tx only) Contains a list of Rx numbers that are watching that transmitter, separated by commas.                                                                                       |
 
 # Limitations #
 * Doesn't work with Luxul switches
