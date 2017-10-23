@@ -1,4 +1,4 @@
-Indigo (http://www.indigodomo.com) plugin for Just Add Power (www.justaddpower.com) Devices
+Indigo (http://www.indigodomo.com) plugin for Just Add Power (www.justaddpower.com) HDMI over IP Distribution Systems
 
 # Requirements #
 JAP Matrix with a Cisco Switch.  Luxul switches are not supported yet.
