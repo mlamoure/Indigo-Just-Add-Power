@@ -14,7 +14,7 @@ JAP Matrix with a Cisco Switch.  Luxul switches are not supported yet.
 
 # Install Notes #
 * No plugin config needed (debug mode only for troubleshooting)
-* Add your switch using the standard "New Device" method
+* Add your switch using the standard "New Device" method.  Put in the IP, login, password of your switch.  Change the Control VLAN only if it is not the default.
 * No need to add your individual Tx's and Rx's, the plugin will do that for you.  Feel free to rename the Tx's and Rx's to something more descriptive, devices are managed by the plugin through their IP address, which shouldn't change.
 
 # States #
