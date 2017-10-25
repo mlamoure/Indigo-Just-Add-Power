@@ -182,9 +182,13 @@ class JustAddPowerMatrix(object):
 		for dev in self.Rx:
 			dev.vlan_watching = "Unknown"
 
-		self._sendCommand("show vlan")
-		vlan_output = self.connection.read_until("#")
-		self.logger.debug(vlan_output)
+		try:
+			self._sendCommand("show vlan")
+			vlan_output = self.connection.read_until("#")
+			self.logger.debug(vlan_output)
+		except:
+			self.logger.error("Error while refreshing VLAN status.")
+			return
 
 		for vlan in vlan_output.splitlines():
 

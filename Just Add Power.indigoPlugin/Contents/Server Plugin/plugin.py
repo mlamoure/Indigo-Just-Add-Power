@@ -158,7 +158,7 @@ class Plugin(indigo.PluginBase):
 											being_watched_ui = being_watched_ui + ", Rx. " + str(Rx) + " (" + RxDev.name + ")"
 										break
 
-						indigo.server.log(dev.name + " updated to now sending to " + being_watched_ui)
+							indigo.server.log(dev.name + " updated to now sending to " + being_watched_ui)
 						dev.updateStateOnServer(key="being_watched", value=Tx.being_watched)
 						dev.updateStateOnServer(key="being_watched_ui", value=being_watched_ui)
 					break
@@ -175,14 +175,14 @@ class Plugin(indigo.PluginBase):
 			for Rx in selMatrix.Rx:
 				if Rx.ip == dev.pluginProps["ip"]:
 					if str(dev.states["vlan_watching"]) != str(Rx.vlan_watching):
+						vlan_watching_ui = "unknown"
 						if Rx.vlan_watching != "Unknown":
-							vlan_watching_ui = ""
 							for TxDev in [s for s in indigo.devices.iter(filter="self.transmitter") if s.enabled]:
 								if TxDev.pluginProps["vlan"] == Rx.vlan_watching:
 									vlan_watching_ui = "VLAN " + str(Rx.vlan_watching) + " (" + TxDev.name + ")"
 									break
+							indigo.server.log(dev.name + " updated to now watching " + vlan_watching_ui)
 
-						indigo.server.log(dev.name + " updated to now watching " + vlan_watching_ui)
 						dev.updateStateOnServer(key="vlan_watching", value=Rx.vlan_watching)
 						dev.updateStateOnServer(key="vlan_watching_ui", value=vlan_watching_ui)
 
