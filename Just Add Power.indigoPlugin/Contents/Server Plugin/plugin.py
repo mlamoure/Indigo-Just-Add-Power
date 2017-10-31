@@ -145,18 +145,23 @@ class Plugin(indigo.PluginBase):
 					being_watched_ui = str(Tx.being_watched)
 					if dev.states["being_watched"] != str(Tx.being_watched):
 
-
 						if Tx.being_watched != "Not in use" and Tx.being_watched != "Unknown":
+							being_watched_ui = ""
+
 							for Rx in Tx.being_watched.strip().split(","):
 #								self.logger.debug(dev.name + " update: looking for Rx. " + str(Rx.strip()))
 								for RxDev in [s for s in indigo.devices.iter(filter="self.receiver") if s.enabled]:
-									if RxDev.pluginProps["no"] == int(Rx.strip()):
+									if RxDev.pluginProps["no"] == int(Rx.strip()) and not RxDev.pluginProps["ignore"]:
 
 										if len(being_watched_ui) == 0:
 											being_watched_ui = "Rx. " + str(Rx) + " (" + RxDev.name + ")"
 										else:
 											being_watched_ui = being_watched_ui + ", Rx. " + str(Rx) + " (" + RxDev.name + ")"
 										break
+
+						# This will happen if all the Rx's are ignored that this Tx is watching
+						if len(being_watched_ui) == 0:
+							being_watched_ui = "Not in use"
 
 							indigo.server.log(dev.name + " updated to now sending to " + being_watched_ui)
 						dev.updateStateOnServer(key="being_watched", value=Tx.being_watched)
@@ -174,7 +179,13 @@ class Plugin(indigo.PluginBase):
 
 			for Rx in selMatrix.Rx:
 				if Rx.ip == dev.pluginProps["ip"]:
-					if str(dev.states["vlan_watching"]) != str(Rx.vlan_watching):
+					if dev.pluginProps["ignore"]:
+						vlan_watching_ui = "Not in use"
+						vlan_watching = ""
+						dev.updateStateOnServer(key="vlan_watching", value=Rx.vlan_watching)
+						dev.updateStateOnServer(key="vlan_watching_ui", value=vlan_watching_ui)
+
+					elif str(dev.states["vlan_watching"]) != str(Rx.vlan_watching):
 						vlan_watching_ui = "unknown"
 						if Rx.vlan_watching != "Unknown":
 							for TxDev in [s for s in indigo.devices.iter(filter="self.transmitter") if s.enabled]:
@@ -351,6 +362,7 @@ class Plugin(indigo.PluginBase):
 					props["matrix"] = matrix_dev.id
 					props["no"] = Rx.no
 					props["ip"] = Rx.ip
+					props["ignore"] = False
 
 					dev.replacePluginPropsOnServer(props)
 

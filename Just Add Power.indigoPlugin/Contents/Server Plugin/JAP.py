@@ -7,6 +7,7 @@ class JAPDevice(object):
 		self.vlan = vlan
 		self.ip = ip
 		self.logger = logger
+		self.connected = False
 
 	def _sendCommand(self, cmd):
 		self.logger.debug(u"Sending network command:  %s" % cmd)
@@ -46,6 +47,7 @@ class JAPDevice(object):
 		try:
 			self.logger.info(u"Connecting to JAP Device via IP  %s" % self.ip)
 			self.connection = telnetlib.Telnet(self.ip, 23)
+			self.connected = True
 			time.sleep(3)
 
 		except:
@@ -62,7 +64,6 @@ class JustAddPowerTransmitter(JAPDevice):
 		self.no = int(vlan) - 10
 		self.ignore = False  # Set this to true for a device that is set up in JADConfig but isn't actually being used. e.g. when you make a larger matrix to give yourself headroom.
 		self.being_watched = "Unknown"
-		self.connected = False
 
 class JustAddPowerReceiver(JAPDevice):
 	def __init__(self, vlan, no, ip, port, logger):

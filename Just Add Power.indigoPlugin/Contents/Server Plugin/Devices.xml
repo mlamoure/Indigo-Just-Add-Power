@@ -60,8 +60,8 @@
 		    </State>			
 			<State id="connectionState_ui">
 		        <ValueType>String</ValueType>
-		        <TriggerLabel>Connection State</TriggerLabel>
-		        <ControlPageLabel>Connection State</ControlPageLabel>
+		        <TriggerLabel>Connection State Long</TriggerLabel>
+		        <ControlPageLabel>Connection State Long</ControlPageLabel>
 		    </State>			
     	</States>
 	</Device>
@@ -104,7 +104,6 @@
 				<Label>Tx IP:</Label>
 			</Field>
 
-
 		</ConfigUI>
 		<States>
 			<State id="being_watched">
@@ -114,8 +113,8 @@
 		    </State>			
 			<State id="being_watched_ui">
 		        <ValueType>String</ValueType>
-		        <TriggerLabel>Being watched by</TriggerLabel>
-		        <ControlPageLabel>Being watched by</ControlPageLabel>
+		        <TriggerLabel>Being watched by (long)</TriggerLabel>
+		        <ControlPageLabel>Being watched by (long)</ControlPageLabel>
 		    </State>			
     	</States>
 	</Device>
@@ -157,6 +156,8 @@
 				<Label>Rx IP:</Label>
 			</Field>
 
+			<Field hidden="false" type="checkbox" defaultValue="false" id="ignore"><Label>Ignore (will ignore status updates)</Label><Description></Description></Field>
+
 		</ConfigUI>
 		<States>
 			<State id="vlan_watching">
@@ -167,7 +168,7 @@
 			<State id="vlan_watching_ui">
 		        <ValueType>String</ValueType>
 		        <TriggerLabel>VLAN Watching</TriggerLabel>
-		        <ControlPageLabel>VLAN Watching</ControlPageLabel>
+		        <ControlPageLabel>VLAN Watching (Long)</ControlPageLabel>
 		    </State>			
     	</States>
 	</Device>
