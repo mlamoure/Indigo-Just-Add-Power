@@ -324,7 +324,7 @@ class Plugin(indigo.PluginBase):
 
 	def updateDevices(self):
 		for matrix in self.matrixList:
-			for dev in indigo.devices.iter("com.perceptiveautomation.indigoplugin.justaddpower"):
+			for dev in indigo.devices.iter("com.vtmikel.justaddpower"):
 				if dev.pluginProps["ip"] == matrix.ip:
 					matrix_dev = dev
 					break
@@ -341,7 +341,7 @@ class Plugin(indigo.PluginBase):
 				devAddr = Rx.ip
 				devDesc = devName
 
-				for dev in indigo.devices.iter("com.perceptiveautomation.indigoplugin.justaddpower"):
+				for dev in indigo.devices.iter("com.vtmikel.justaddpower"):
 					if dev.address == Rx.ip:
 						devExists = True
 						break
@@ -353,7 +353,7 @@ class Plugin(indigo.PluginBase):
 						address=devAddr,
 						name=devName,
 						description=devDesc,
-						pluginId="com.perceptiveautomation.indigoplugin.justaddpower",
+						pluginId="com.vtmikel.justaddpower",
 						deviceTypeId="receiver",
 						folder=self.indigoDeviceFolderID
 					)
@@ -381,7 +381,7 @@ class Plugin(indigo.PluginBase):
 				devAddr = Tx.ip
 				devDesc = devName
 
-				for dev in indigo.devices.iter("com.perceptiveautomation.indigoplugin.justaddpower"):
+				for dev in indigo.devices.iter("com.vtmikel.justaddpower"):
 					if dev.address == Tx.ip:
 						devExists = True
 						break
@@ -393,7 +393,7 @@ class Plugin(indigo.PluginBase):
 						address=devAddr,
 						name=devName,
 						description=devDesc,
-						pluginId="com.perceptiveautomation.indigoplugin.justaddpower",
+						pluginId="com.vtmikel.justaddpower",
 						deviceTypeId="transmitter",
 						folder=self.indigoDeviceFolderID
 					)
