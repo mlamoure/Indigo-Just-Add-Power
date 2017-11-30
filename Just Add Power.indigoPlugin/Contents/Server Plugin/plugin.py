@@ -124,9 +124,9 @@ class Plugin(indigo.PluginBase):
 					break
 
 
-			dev.updateStateOnServer(key="connectionState", value=str(selMatrix.connected))
+			dev.updateStateOnServer(key="connectionState", value=str(selMatrix.is_Connected()))
 
-			if selMatrix.connected:
+			if selMatrix.is_Connected():
 				dev.updateStateOnServer(key="connectionState_ui", value="Connected")					
 			else:
 				dev.updateStateOnServer(key="connectionState_ui", value="Not Connected")					
@@ -162,7 +162,8 @@ class Plugin(indigo.PluginBase):
 						# This will happen if all the Rx's are ignored that this Tx is watching
 						if len(being_watched_ui) == 0:
 							being_watched_ui = "Not in use"
-
+						
+						if being_watched_ui != "Unknown":
 							indigo.server.log(dev.name + " updated to now sending to " + being_watched_ui)
 						dev.updateStateOnServer(key="being_watched", value=Tx.being_watched)
 						dev.updateStateOnServer(key="being_watched_ui", value=being_watched_ui)
@@ -230,6 +231,7 @@ class Plugin(indigo.PluginBase):
 	def rebootSwitch(self, pluginAction, dev):
 		for matrix in self.matrixList:
 			if dev.pluginProps["ip"] == matrix.ip:
+				indigo.server.log("rebooting " + dev.name)
 				matrix.reboot()
 
 	def imagepull(self, pluginAction, dev):

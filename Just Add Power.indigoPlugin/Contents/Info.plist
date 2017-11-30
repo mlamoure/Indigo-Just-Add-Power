@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>PluginVersion</key>
-	<string>1.0.3</string>
+	<string>1.0.6</string>
 	<key>ServerApiVersion</key>
 	<string>2.0</string>
 	<key>IwsApiVersion</key>
@@ -11,7 +11,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>Just Add Power</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.perceptiveautomation.indigoplugin.justaddpower</string>
+	<string>com.vtmikel.justaddpower</string>
 	<key>CFBundleVersion</key>
 	<string>1.0.0</string>
 	<key>CFBundleURLTypes</key>

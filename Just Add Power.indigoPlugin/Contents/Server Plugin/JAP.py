@@ -7,16 +7,33 @@ class JAPDevice(object):
 		self.vlan = vlan
 		self.ip = ip
 		self.logger = logger
-		self.connected = False
+		self.connection = None
 
 	def _sendCommand(self, cmd):
-		self.logger.debug(u"Sending network command:  %s" % cmd)
-		cmd = cmd + "\r\n"
-		self.connection.write(str(cmd))
+		if not self.is_Connected():
+			self.logger.debug("was not connected, connecting...")
+			self._connect()
+
+		try:
+			self.logger.debug(u"Sending command:  %s" % cmd)
+			cmdsend = cmd + "\r\n"
+			self.connection.write(str(cmdsend))
+			self.logger.debug(self.connection.read_until("#"))
+			self.logger.info(cmd + " command was sucessfull")
+		except:
+			self.logger.error("problem sending command")
+
+	def is_Connected(self):
+		if self.connection is None:
+			return False
+
+		try:
+			self.connection.write("echo test\r\n\n")
+			return True
+		except:
+			return False
 
 	def enableImagePull(self, res=320, prior=1, rate=3):
-		if not self.connected:
-			self._connect()
 		self.logger.debug("enabling image pull")
 
 		command = "astparam s pull_on_boot " + str(res) + "_" + str(prior) + "_" + str(rate) + ";astparam save;reboot "
@@ -25,8 +42,6 @@ class JAPDevice(object):
 		self._sendCommand(command)
 
 	def disableImagePull(self):
-		if not self.connected:
-			self._connect()
 		self.logger.debug("disabling image pull")
 
 		command = "astparam s pull_on_boot n;astparam save;reboot "
@@ -35,24 +50,29 @@ class JAPDevice(object):
 		self._sendCommand(command)
 
 	def reboot(self):
-		if not self.connected:
-			self._connect()
-
 		command = "reboot"
 
-		self.logger.debug("sending command:" + command)
 		self._sendCommand(command)
 
 	def _connect(self):
-		try:
-			self.logger.info(u"Connecting to JAP Device via IP  %s" % self.ip)
-			self.connection = telnetlib.Telnet(self.ip, 23)
-			self.connected = True
-			time.sleep(3)
+		isConnectedRetry = 0
+		while not self.is_Connected():
+			isConnectedRetry += 1
 
-		except:
-			self.logger.exception(u"Unable to connect. %s" % e.message)
-			self.connected = False
+			if isConnectedRetry > 10:
+				self.logger.debug("Maximum number of connection retries has occured.")
+				return
+
+			try:
+				self.logger.info(u"Connecting to JAP Device via IP  %s" % self.ip)
+				self.connection = telnetlib.Telnet(self.ip, 23)
+				time.sleep(3)
+
+			except:
+				self.logger.exception("Connection attempt failed. %s" % e.message)
+				time.sleep(5)
+
+		self.logger.debug("Connected")
 
 class JustAddPowerTransmitter(JAPDevice):
 	def __init__(self, vlan, ip, logger):
@@ -88,7 +108,6 @@ class JustAddPowerMatrix(object):
 		self.TxCount = 0
 		self.controlVLAN = controlVLAN
 		self.receiverVLAN = 10
-		self.connected = False
 
 		self.Rx = []
 		self.Tx = []
@@ -158,7 +177,6 @@ class JustAddPowerMatrix(object):
 				if 'Password' in a:
 					self.logger.debug(u"Sending password.")
 					self.connection.write(str(self.password) + "\r\n")
-					self.connected = True
 
 					a = self.connection.read_until("#")
 					self.logger.debug(u"Telnet: %s" % a)
@@ -238,7 +256,10 @@ class JustAddPowerMatrix(object):
 									break
 									
 					else:
-						RxPortNo = int(port[2:])
+						try:
+							RxPortNo = int(port[2:])
+						except:
+							continue
 
 						self.logger.debug("Evaluating port " + str(RxPortNo) + " for VLAN " + str(vlan_no))
 
@@ -387,13 +408,21 @@ class JustAddPowerMatrix(object):
 		self.logger.debug("end of VLAN processing")
 
 	def reboot(self):
-		if not self.connected:
-			self._connect()
-
 		command = "reload"
 
-		self.logger.debug("sending command:" + command)
 		self._sendCommand(command)
+		self.logger.debug(self.connection.read_until("#"))
+
+	def is_Connected(self):
+		if self.connection is None:
+			return False
+
+		try:
+			self.connection.write("\r\n")
+			self.logger.debug(self.connection.read_until("#"))
+			return True
+		except:
+			return False
 
 	def _sendCommand(self, cmd):
 		try:
@@ -401,8 +430,10 @@ class JustAddPowerMatrix(object):
 			cmd = cmd + "\r\n"
 			self.connection.write(str(cmd))
 		except IOError:
+			self.logger.error("problem sending command, retrying...")
 			self._connect()
-			self.logger.error(u"Error while communicating, trying to send again network command:  %s" % cmd)
+			self.logger.debug(u"Sending network command:  %s" % cmd)
 			cmd = cmd + "\r\n"
 			self.connection.write(str(cmd))
+
 

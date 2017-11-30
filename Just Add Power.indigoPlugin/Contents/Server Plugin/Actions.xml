@@ -65,14 +65,8 @@
 		</ConfigUI>
     </Action>
     <Action id="rebootSwitch" deviceFilter="self.matrix">
-        <Name>Reboot Switch</Name>
+        <Name>Reboot Cisco Switch</Name>
         <CallbackMethod>rebootSwitch</CallbackMethod>
-		<ConfigUI>
-		    <Field id="device" type="menu">
-			    <Label>Device:</Label>
-			    <List method="" class="self.matrix" />
-		    </Field>
-		</ConfigUI>
     </Action>
 
 </Actions>
