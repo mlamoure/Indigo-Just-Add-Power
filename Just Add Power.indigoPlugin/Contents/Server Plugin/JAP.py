@@ -20,6 +20,7 @@ class JAPDevice(object):
 			self.connection.write(str(cmdsend))
 			self.logger.debug(self.connection.read_until("#"))
 			self.logger.info(cmd + " command was sucessfull")
+			self.connection = None
 		except:
 			self.logger.error("problem sending command")
 
@@ -28,10 +29,17 @@ class JAPDevice(object):
 			return False
 
 		try:
-			self.connection.write("echo test\r\n\n")
+			self.connection.write("\r\n")
+
+			output_test = self.connection.read_until("#")
+
+			self.logger.debug(output_test)
+
 			return True
 		except:
 			return False
+
+		return False
 
 	def enableImagePull(self, res=320, prior=1, rate=3):
 		self.logger.debug("enabling image pull")
@@ -419,10 +427,16 @@ class JustAddPowerMatrix(object):
 
 		try:
 			self.connection.write("\r\n")
-			self.logger.debug(self.connection.read_until("#"))
+
+			output_test = self.connection.read_until("#")
+
+			self.logger.debug(output_test)
+
 			return True
 		except:
 			return False
+
+		return False
 
 	def _sendCommand(self, cmd):
 		try:

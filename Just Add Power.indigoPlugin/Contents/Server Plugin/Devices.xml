@@ -104,6 +104,15 @@
 				<Label>Tx IP:</Label>
 			</Field>
 
+
+	<Field id="IgnoreTxInstruction" type="label" fontColor="darkgray" fontSize="small" alignWithControl="false">
+		<Label>If your matrix is set up larger than your actual devices, and this Tx is not in use, check the "not in use" box.  This will reduce the output to the Event Log by ignoring this device.  Also the Tx device in Indigo will show as "not in use" rather than reporting the VLAN that the switch is currently assigned for this Tx.
+		</Label>
+	</Field>
+
+			<Field hidden="false" type="checkbox" defaultValue="false" id="ignore"><Label>Not in use:</Label><Description></Description></Field>
+
+
 		</ConfigUI>
 		<States>
 			<State id="being_watched">
@@ -156,7 +165,12 @@
 				<Label>Rx IP:</Label>
 			</Field>
 
-			<Field hidden="false" type="checkbox" defaultValue="false" id="ignore"><Label>Ignore (will ignore status updates)</Label><Description></Description></Field>
+	<Field id="IgnoreRxInstruction" type="label" fontColor="darkgray" fontSize="small" alignWithControl="false">
+		<Label>If your matrix is set up larger than your actual devices, and this Rx is not in use, check "not in use" box.  This will reduce the output to the Event Log by ignoring this device.  Also the Rx device in Indigo will show as "not in use" rather than reporting the VLAN that the switch is currently assigned for this Rx.
+		</Label>
+	</Field>
+
+			<Field hidden="false" type="checkbox" defaultValue="false" id="ignore"><Label>Not in use:</Label><Description></Description></Field>
 
 		</ConfigUI>
 		<States>

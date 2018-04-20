@@ -163,7 +163,12 @@ class Plugin(indigo.PluginBase):
 						if len(being_watched_ui) == 0:
 							being_watched_ui = "Not in use"
 						
-						if being_watched_ui != "Unknown":
+						if not "ignore" in dev.pluginProps:
+							props = dev.pluginProps
+							props["ignore"] = False
+							dev.replacePluginPropsOnServer(props)
+
+						if being_watched_ui != "Unknown" and not dev.pluginProps["ignore"]:
 							indigo.server.log(dev.name + " updated to now sending to " + being_watched_ui)
 						dev.updateStateOnServer(key="being_watched", value=Tx.being_watched)
 						dev.updateStateOnServer(key="being_watched_ui", value=being_watched_ui)
@@ -193,7 +198,9 @@ class Plugin(indigo.PluginBase):
 								if TxDev.pluginProps["vlan"] == Rx.vlan_watching:
 									vlan_watching_ui = "VLAN " + str(Rx.vlan_watching) + " (" + TxDev.name + ")"
 									break
-							indigo.server.log(dev.name + " updated to now watching " + vlan_watching_ui)
+
+							if not dev.pluginProps["ignore"]:
+								indigo.server.log(dev.name + " updated to now watching " + vlan_watching_ui)
 
 						dev.updateStateOnServer(key="vlan_watching", value=Rx.vlan_watching)
 						dev.updateStateOnServer(key="vlan_watching_ui", value=vlan_watching_ui)
@@ -404,6 +411,7 @@ class Plugin(indigo.PluginBase):
 					props["matrix"] = matrix_dev.id
 					props["ip"] = Tx.ip
 					props["vlan"] = Tx.vlan
+					props["ignore"] = False
 
 					dev.replacePluginPropsOnServer(props)
 
