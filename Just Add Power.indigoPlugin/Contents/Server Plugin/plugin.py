@@ -10,8 +10,13 @@ import datetime
 import time
 import requests
 import json
+import shutil
+from PIL import Image
+
 from ghpu import GitHubPluginUpdater
 from JAP import JustAddPowerMatrix
+from JAP import JustAddPowerTransmitter
+from JAP import JustAddPowerReceiver
 
 
 DEFAULT_UPDATE_FREQUENCY = 24 # frequency of update check
@@ -21,9 +26,17 @@ class Plugin(indigo.PluginBase):
 	########################################
 	def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
 		super(Plugin, self).__init__(pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
-		self.pollingInterval = 45
 		self.matrixList = []
 		self.debug = pluginPrefs.get("debug", False)
+		self.L2Debug = pluginPrefs.get("L2Debug", False)
+		self.image_pull = pluginPrefs.get("image_pull", False)
+		self.image_pull_dir = pluginPrefs.get("image_pull_dir", "")
+		self.image_pull_refresh = pluginPrefs.get("image_pull_refresh", 10)
+
+		if self.image_pull:
+			self.pollingInterval = self.image_pull_refresh
+		else:
+			self.pollingInterval = 45
 
 		self.updater = GitHubPluginUpdater(self)
 		self.updater.checkForUpdate(str(self.pluginVersion))
@@ -42,6 +55,16 @@ class Plugin(indigo.PluginBase):
 	def closedPrefsConfigUi(self, valuesDict, userCancelled):
 		if not userCancelled:
 			self.debug = valuesDict["debug"]
+			self.L2Debug = valuesDict["L2Debug"]
+
+			self.image_pull = valuesDict["image_pull"]
+			self.image_pull_dir = valuesDict["image_pull_dir"]
+			self.image_pull_refresh = valuesDict["image_pull_refresh"]
+
+			if self.image_pull:
+				self.pollingInterval = self.image_pull_refresh
+			else:
+				self.pollingInterval = 45
 
 	def updatePlugin(self):
 		self.updater.update()
@@ -58,6 +81,8 @@ class Plugin(indigo.PluginBase):
 			while True:
 				self.updateAllStates()
 				self.updateVariables()
+				self.performImagePull()
+
 				self.sleep(int(self.pollingInterval))
 
 				if self.lastUpdateCheck < datetime.datetime.now()-datetime.timedelta(hours=DEFAULT_UPDATE_FREQUENCY):
@@ -90,7 +115,7 @@ class Plugin(indigo.PluginBase):
 		self.debugLog(u"deviceStartComm: %s" % (dev.name,))
 
 		if dev.deviceTypeId == "matrix":
-			self.matrixList.append(JustAddPowerMatrix(dev.pluginProps["Model"], dev.pluginProps["ip"], dev.pluginProps["Login"], dev.pluginProps["Password"], dev.pluginProps["ControlVLAN"], self.logger))
+			self.matrixList.append(JustAddPowerMatrix(dev.pluginProps["Model"], dev.pluginProps["ip"], dev.pluginProps["Login"], dev.pluginProps["Password"], dev.pluginProps["ControlVLAN"], self.logger, self.L2Debug))
 			self.updateDevices()
 
 			if len(dev.address) < 2:
@@ -100,6 +125,80 @@ class Plugin(indigo.PluginBase):
 
 		self.updateDeviceStates(dev)
 
+
+	def performImagePull(self):
+		if not self.image_pull:
+			return
+
+		for matrix in self.matrixList:
+			for Rx in matrix.Rx:
+				dev = self.getIndigoDevice(Rx)
+
+				if dev is None:
+					pass
+
+				# Doing a little cleanup here.  It seems we wernt always saving this correctly.
+				if dev.pluginProps["ignore"]:
+					Rx.ignore = True
+
+				if not Rx.ignore:
+					result = self.getImage(Rx.image_pull_url, self.image_pull_dir + "/Rx" + str(Rx.no) + ".bmp")
+
+					if result:
+						self.convertImage(self.image_pull_dir + "/Rx" + str(Rx.no) + ".bmp")
+
+			for Tx in matrix.Tx:
+				dev = self.getIndigoDevice(Tx)
+
+				if dev is None:
+					pass
+
+				# Doing a little cleanup here.  It seems we wernt always saving this correctly.
+				if dev.pluginProps["ignore"]:
+					Tx.ignore = True
+
+				if not Tx.ignore:
+					result = self.getImage(Tx.image_pull_url, self.image_pull_dir + "/Tx" + str(Tx.no) + ".bmp")
+
+					if result:
+						self.convertImage(self.image_pull_dir + "/Tx" + str(Tx.no) + ".bmp")
+
+
+	def getImage(self, url, save):
+		self.logger.debug("getting image: " + url + " and saving it to: " + save)
+
+		try:
+			r = requests.get(url, stream=True, timeout=5)
+
+			if r.status_code == 200:
+				with open(save, 'wb') as f:
+					r.raw.decode_content = True
+					shutil.copyfileobj(r.raw, f)
+			else:			
+				self.logger.debug("   error getting image pull.  Status code: " + str(r.status_code))
+				del r
+				return False
+
+			del r
+			self.logger.debug("   completed")
+			return True
+		except requests.exceptions.Timeout:
+			self.logger.debug("   the request timed out.")
+		except Exception as e:
+			self.logger.debug("   error getting image. error: " + str(e))
+			return False
+
+
+	def convertImage(self, image):
+		self.logger.debug("converting image: " + image)
+		try:	
+			if image is not None:
+				img = Image.open(image)
+				img.save(image[:-3] + "jpg", 'jpeg')
+				return True
+		except Exception as e:
+			self.logger.error("Error converting image: " + str(e))
+			return False
 
 	def updateAllStates(self, dev = None):
 		self.logger.debug("Started update all states")
@@ -134,11 +233,10 @@ class Plugin(indigo.PluginBase):
 		elif dev.deviceTypeId == "transmitter" and "matrix" in dev.pluginProps:
 			matrixDev = indigo.devices[dev.pluginProps["matrix"]]
 
-			selMatrix = None
-			for matrix in self.matrixList:
-				if matrixDev.pluginProps["ip"] == matrix.ip:
-					selMatrix = matrix
-					break
+			selMatrix = self.getJAPDevice(matrixDev)
+
+			if selMatrix is None:
+				return
 
 			for Tx in selMatrix.Tx:
 				if Tx.ip == dev.pluginProps["ip"]:
@@ -177,11 +275,10 @@ class Plugin(indigo.PluginBase):
 		elif dev.deviceTypeId == "receiver" and "matrix" in dev.pluginProps:
 			matrixDev = indigo.devices[dev.pluginProps["matrix"]]
 
-			selMatrix = None
-			for matrix in self.matrixList:
-				if matrixDev.pluginProps["ip"] == matrix.ip:
-					selMatrix = matrix
-					break
+			selMatrix = self.getJAPDevice(matrixDev)
+
+			if selMatrix is None:
+				return
 
 			for Rx in selMatrix.Rx:
 				if Rx.ip == dev.pluginProps["ip"]:
@@ -242,15 +339,17 @@ class Plugin(indigo.PluginBase):
 				matrix.reboot()
 
 	def imagepull(self, pluginAction, dev):
-		selMatrix = None
-		for matrix in self.matrixList:
-			if dev.pluginProps["ip"] == matrix.ip:
-				selMatrix = matrix
+		selMatrix = self.getJAPDevice(dev)
 
-		device = None
-		for JAPDevice in selMatrix.allDevices():
-			if indigo.devices[int(pluginAction.props["device"])].pluginProps["ip"] == JAPDevice.ip:
-				device = JAPDevice
+		if selMatrix is None:
+			self.logger.error("error while executing the action")
+			return
+
+		device = self.getJAPDevice(indigo.devices[int(pluginAction.props["device"])].pluginProps["ip"])
+
+		if device is None:
+			self.logger.error("error while executing the action")
+			return
 
 		if pluginAction.props["enableDisable"] == "enable":
 			device.enableImagePull(pluginAction.props["resolution"], pluginAction.props["priority"], pluginAction.props["rate"])
@@ -262,17 +361,8 @@ class Plugin(indigo.PluginBase):
 		for matrix in self.matrixList:
 			if dev.pluginProps["ip"] == matrix.ip:
 
-				for Rx in matrix.Rx:
-					devIP = indigo.devices[int(pluginAction.props["Rx"])].pluginProps["ip"]
-					if Rx.ip == devIP:
-						switchRx = Rx
-						break
-
-				for Tx in matrix.Tx:
-					devIP = indigo.devices[int(pluginAction.props["Tx"])].pluginProps["ip"]
-					if Tx.ip == devIP:
-						switchTx = Tx
-						break
+				switchRx = self.getJAPDevice(indigo.devices[int(pluginAction.props["Rx"])].pluginProps["ip"])
+				switchTx = self.getJAPDevice(indigo.devices[int(pluginAction.props["Tx"])].pluginProps["ip"])
 
 				matrix.watch(switchRx, switchTx)
 				break
@@ -282,9 +372,11 @@ class Plugin(indigo.PluginBase):
 		selMatrix = None
 		availableRx = []
 
-		for matrix in self.matrixList:
-			if matrixdev.pluginProps["ip"] == matrix.ip:
-				selMatrix = matrix
+		selMatrix = self.getJAPDevice(matrixdev)
+
+		if selMatrix is None:
+			self.logger.error("error while executing the selector")
+			return
 
 		for RxDev in [s for s in indigo.devices.iter(filter="self.receiver") if s.enabled]:
 			for Rx in selMatrix.Rx:
@@ -315,9 +407,11 @@ class Plugin(indigo.PluginBase):
 		selMatrix = None
 		availableTx = []
 
-		for matrix in self.matrixList:
-			if matrixdev.pluginProps["ip"] == matrix.ip:
-				selMatrix = matrix
+		selMatrix = self.getJAPDevice(matrixdev)
+
+		if selMatrix is None:
+			self.logger.error("error while executing the selector")
+			return
 
 		for TxDev in [s for s in indigo.devices.iter(filter="self.transmitter") if s.enabled]:
 			for Tx in selMatrix.Tx:
@@ -331,10 +425,12 @@ class Plugin(indigo.PluginBase):
 
 	def updateDevices(self):
 		for matrix in self.matrixList:
-			for dev in indigo.devices.iter("com.vtmikel.justaddpower"):
-				if dev.pluginProps["ip"] == matrix.ip:
-					matrix_dev = dev
-					break
+
+			matrix_dev = self.getIndigoDevice(matrix)
+
+			if matrix_dev is None:
+				self.logger.error("error while searching for the matrix in UpdateDevices")
+				return
 
 			for Rx in matrix.Rx:
 				devExists = False
@@ -434,27 +530,88 @@ class Plugin(indigo.PluginBase):
 		else:
 			self.indigoVariablesFolderID=indigo.variables.folders[self.indigoVariablesFolderName].id
 
+	def getIndigoDevice(self, JAPDevice):
+		if type(JAPDevice) is JustAddPowerTransmitter:
+			for dev in [s for s in indigo.devices.iter(filter="self.transmitter") if s.enabled]:
+				if dev.pluginProps["ip"] == JAPDevice.ip:
+					return dev
+
+
+		elif type(JAPDevice) is JustAddPowerReceiver:
+			for dev in [s for s in indigo.devices.iter(filter="self.receiver") if s.enabled]:
+				if dev.pluginProps["ip"] == JAPDevice.ip:
+					return dev
+
+		return None
+
+	def getJAPDevice(self, indigoDevice):
+
+		if indigoDevice.deviceTypeId == "matrix":
+			for matrix in self.matrixList:
+				if indigoDevice.pluginProps["ip"] == matrix.ip:
+					return matrix
+
+		matrixDev = indigo.devices[indigoDevice.pluginProps["matrix"]]
+		selMatrix = None
+		for matrix in self.matrixList:
+			if matrixDev.pluginProps["ip"] == matrix.ip:
+				selMatrix = matrix
+				break
+
+		if selMatrix is None:
+			self.logger.debug("no matrix was found for device: " + indigoDevice.name)
+			return None
+
+		if indigoDevice.deviceTypeId == "receiver":
+			for Rx in selMatrix.Rx:
+				if indigoDevice.pluginProps["ip"] == Rx.ip:
+					return Rx
+
+		if indigoDevice.deviceTypeId == "transmitter":
+			for Tx in selMatrix.Tx:
+				if indigoDevice.pluginProps["ip"] == Tx.ip:
+					return Tx
+
+		return None
+
 	def updateVariables(self):
 		self.logger.debug("started variable updates")
 		if self.indigoVariablesFolderID is not None:
 			for dev in [s for s in indigo.devices.iter(filter="self") if s.enabled]:
 
 				if dev.deviceTypeId != "matrix":
-					selMatrix = None
-					for matrix in self.matrixList:
-						if dev.pluginProps["matrix"] == matrix.ip:
-							selMatrix = matrix
+					RxTxDevice = self.getJAPDevice(dev)
 
-					varName = dev.name.replace(' ', '_') + "_image_pull_url"
+					if RxTxDevice is None:
+						continue
+
+					# Image pull URLS
+					varName = dev.name.replace(' ', '_').replace(".", "").replace("-", "_") + "_image_pull_url"
 					if not varName in indigo.variables:
 						self.logger.debug("Created variables for device " + dev.name)
 						indigo.variable.create(varName,folder=self.indigoVariablesFolderID)
 
-					varValue = "http://" + dev.pluginProps["ip"] + "/pull.bmp"
+					varValue = RxTxDevice.image_pull_url
 
 					if indigo.variables[varName].value != varValue:
 						self.logger.debug("Updated variable value for device " + dev.name)
 						indigo.variable.updateValue(varName, varValue)
+
+					if self.image_pull:
+						# Image pull converted files
+						varName = dev.name.replace(' ', '_').replace(".", "").replace("-", "_") + "_image_pull_file_url"
+						if not varName in indigo.variables:
+							self.logger.debug("Created variables for image pull for device " + dev.name)
+							indigo.variable.create(varName,folder=self.indigoVariablesFolderID)
+
+						if dev.deviceTypeId == "transmitter":
+							varValue = "file://" + self.image_pull_dir + "/Tx" + str(RxTxDevice.no) + ".jpg"
+						else:
+							varValue = "file://" + self.image_pull_dir + "/Rx" + str(RxTxDevice.no) + ".jpg"
+
+						if indigo.variables[varName].value != varValue:
+							self.logger.debug("Updated variable value for device " + dev.name)
+							indigo.variable.updateValue(varName, varValue)
 
 		else:
 			self.createVariableFolder(self.indigoVariablesFolderName)

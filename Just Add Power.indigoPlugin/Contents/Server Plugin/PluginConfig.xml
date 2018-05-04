@@ -2,6 +2,42 @@
 <PluginConfig>
 	<SupportURL>https://github.com/mlamoure/</SupportURL>
 
-			<Field hidden="false" type="checkbox" id="debug"><Label>Debug (will produce a lot of log data)</Label><Description></Description></Field>
+		<Field id="image_pull_instruction" type="label" fontColor="darkgray" fontSize="small" alignWithControl="false">
+			<Label>When Automatic Image pull is enabled, the plugin will pull the images based on the refresh rate set (configurable below), and convert them to JPEGs, storing them locally on your mac.  This can be used to include the JAP image pull images in your Control Pages.  Variables will be created to tell you where to find the image for each device.  Note: This will only happen for devices that are marked "in use" in the device properties, and images will only appear for Rx's and Tx's with image pull enabed.</Label>
+		</Field>
+
+
+		<Field id="image_pull" type="checkbox">
+				<Label>Enable automatic image pull for all devices:</Label>
+		</Field>
+
+		<Field id="image_pull_dir_instruction" type="label" fontColor="darkgray" fontSize="small" alignWithControl="false">
+			<Label>The image pull directory will be used to download the uncompressed BMP images from each active Rx and Tx.  Then the BMP images will be converted to JPEGs.  A Indigo variable will be created for the name and location of each of the locations for the converted images.
+			</Label>
+		</Field>
+
+		<Field id="image_pull_dir" type="textfield" defaultValue="/Users/yourusername/Documents/JAP" tooltip="location for the image pull files" enabledBindingId="image_pull">
+				<Label>Image pull data directory:</Label>
+		</Field>
+
+		<Field type="menu" id="image_pull_refresh" enabledBindingId="image_pull" defaultValue="60">
+			<Label>Image pull refresh:</Label>
+			<List>
+				<Option value="30">30 seconds</Option>
+				<Option value="60">1 minute</Option>
+				<Option value="120">2 minutes</Option>
+				<Option value="300">5 minute</Option>
+			</List>
+		</Field>			
+
+	<Field id="simpleSeparator2" type="separator"/>
+
+		<Field hidden="false" type="checkbox" id="debug"><Label>Plugin Debug</Label>
+			<Description></Description>
+		</Field>
+
+		<Field hidden="false" type="checkbox" id="L2Debug"><Label>Terminal Debug (will produce a lot of log data)</Label>
+			<Description></Description>
+		</Field>
 
 </PluginConfig>

@@ -3,11 +3,13 @@ import telnetlib
 import time
 
 class JAPDevice(object):
-	def __init__(self, vlan, ip, logger):
+	def __init__(self, vlan, ip, logger, L2Debug):
 		self.vlan = vlan
 		self.ip = ip
 		self.logger = logger
+		self.L2Debug = L2Debug
 		self.connection = None
+		self.image_pull_url = "http://" + self.ip + "/pull.bmp"
 
 	def _sendCommand(self, cmd):
 		if not self.is_Connected():
@@ -83,8 +85,8 @@ class JAPDevice(object):
 		self.logger.debug("Connected")
 
 class JustAddPowerTransmitter(JAPDevice):
-	def __init__(self, vlan, ip, logger):
-		super(JustAddPowerTransmitter, self).__init__(vlan, ip, logger)
+	def __init__(self, vlan, ip, logger, L2Debug):
+		super(JustAddPowerTransmitter, self).__init__(vlan, ip, logger, L2Debug)
 
 #		self.vlan = int(vlan)
 #		self.ip = ip
@@ -94,8 +96,8 @@ class JustAddPowerTransmitter(JAPDevice):
 		self.being_watched = "Unknown"
 
 class JustAddPowerReceiver(JAPDevice):
-	def __init__(self, vlan, no, ip, port, logger):
-		super(JustAddPowerReceiver, self).__init__(vlan, ip, logger)
+	def __init__(self, vlan, no, ip, port, logger, L2Debug):
+		super(JustAddPowerReceiver, self).__init__(vlan, ip, logger, L2Debug)
 #		self.vlan = int(vlan)
 #		self.ip = ip
 
@@ -106,7 +108,7 @@ class JustAddPowerReceiver(JAPDevice):
 
 class JustAddPowerMatrix(object):
 	"""docstring for JustAddPowerMatrix"""
-	def __init__(self, model, ip, login, password, controlVLAN = 2, logger = None):
+	def __init__(self, model, ip, login, password, controlVLAN = 2, logger = None, L2Debug = False):
 		super(JustAddPowerMatrix, self).__init__()
 		self.model = model
 		self.ip = ip
@@ -121,6 +123,7 @@ class JustAddPowerMatrix(object):
 		self.Tx = []
 
 		self.logger = logger
+		self.L2Debug = L2Debug
 
 		self._connect()
 		self._loadConfiguration()
@@ -145,7 +148,9 @@ class JustAddPowerMatrix(object):
 		self._sendCommand("end")
 
 		output = self.connection.read_until("#")
-		self.logger.debug(output)
+
+		if self.L2Debug:
+			self.logger.debug(output)
 
 
 	def _addReceiver(self, newRx):
@@ -212,7 +217,8 @@ class JustAddPowerMatrix(object):
 		try:
 			self._sendCommand("show vlan")
 			vlan_output = self.connection.read_until("#")
-			self.logger.debug(vlan_output)
+			if self.L2Debug:
+				self.logger.debug(vlan_output)
 		except:
 			self.logger.error("Error while refreshing VLAN status.")
 			return
@@ -305,9 +311,11 @@ class JustAddPowerMatrix(object):
 			self.connection.read_eager()
 			self._sendCommand("show int sw gi" + str(dev.port) + "\r\n")
 			port_output = self.connection.read_until("Port is member in:")
-			self.logger.debug(port_output)
+			if self.L2Debug:
+				self.logger.debug(port_output)
 			port_output = self.connection.read_until("Forbidden")
-			self.logger.debug(port_output)
+			if self.L2Debug:
+				self.logger.debug(port_output)
 
 			for vlan in port_output.splitlines():
 				vlan_no = 10
@@ -342,7 +350,8 @@ class JustAddPowerMatrix(object):
 		self.logger.debug("starting VLAN processing")
 		self._sendCommand("show vlan")
 		vlan_output = self.connection.read_until("#")
-		self.logger.debug(vlan_output)
+		if self.L2Debug:
+			self.logger.debug(vlan_output)
 
 		self._sendCommand("show ip int")
 		ip_int = self.connection.read_until("#")
@@ -382,7 +391,7 @@ class JustAddPowerMatrix(object):
 						break
 
 				self.logger.debug("Adding Transmitter no. " + str(vlan_no - 10) + ", VLAN: " + str(vlan_no) + ", IP: " + tx_ip )
-				newTx = JustAddPowerTransmitter(vlan_no, tx_ip, self.logger)
+				newTx = JustAddPowerTransmitter(vlan_no, tx_ip, self.logger, self.L2Debug)
 				self._addTransmitter(newTx)
 
 
@@ -408,7 +417,7 @@ class JustAddPowerMatrix(object):
 					break
 
 			self.logger.debug("Adding Reciever no. " + str(self.RxCount + 1) + ", VLAN: " + str(vlan_no) + ", IP: " + rx_ip + ", Port: " + str(rx_port))
-			newRx = JustAddPowerReceiver(vlan_no, self.RxCount + 1, rx_ip, rx_port, self.logger)
+			newRx = JustAddPowerReceiver(vlan_no, self.RxCount + 1, rx_ip, rx_port, self.logger, self.L2Debug)
 			self._addReceiver(newRx)
 			rx_port = rx_port + 1
 
@@ -430,7 +439,8 @@ class JustAddPowerMatrix(object):
 
 			output_test = self.connection.read_until("#")
 
-			self.logger.debug(output_test)
+			if self.L2Debug:
+				self.logger.debug(output_test)
 
 			return True
 		except:
