@@ -8,6 +8,7 @@ JAP Matrix with a Cisco Switch.  Luxul switches are not supported yet.
 * Updates the state of each Rx and Tx.  Rx's display which VLAN they are on, and which Tx device is assigned to that VLAN.  Tx's display which Rx's are watching that source.  See the state table below.
 * Action for switching a Rx to a different Transmitter (VLAN)
 * Action for enabling and disabling image pull on a Tx or Rx
+* Support for "image pull client" where Indigo will download the image pull images for each Rx and Tx, convert them to JPEG, and store them into a working directory.  These are then available for embedding into a Control Page.
 * Action for rebooting a switch
 * Action for rebooting a JAP device
 * A maintained list of Indigo variables with the URL to obtain a image pull from each Tx and Rx
@@ -25,7 +26,7 @@ JAP Matrix with a Cisco Switch.  Luxul switches are not supported yet.
 | being_watched       | String  | (Tx only) Contains a list of Rx numbers that are watching that transmitter, separated by commas.                                                                                       |
 
 # Limitations #
-* Doesn't work with Luxul switches
+* Luxul switch support not yet implemented
 
 # Untested but supported #
 * Multiple switches

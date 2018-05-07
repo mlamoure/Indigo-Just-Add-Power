@@ -3,12 +3,12 @@
 	<SupportURL>https://github.com/mlamoure/</SupportURL>
 
 		<Field id="image_pull_instruction" type="label" fontColor="darkgray" fontSize="small" alignWithControl="false">
-			<Label>When Automatic Image pull is enabled, the plugin will pull the images based on the refresh rate set (configurable below), and convert them to JPEGs, storing them locally on your mac.  This can be used to include the JAP image pull images in your Control Pages.  Variables will be created to tell you where to find the image for each device.  Note: This will only happen for devices that are marked "in use" in the device properties, and images will only appear for Rx's and Tx's with image pull enabed.</Label>
+			<Label>When Image Pull Client is enabled, the plugin will download the images based on the refresh rate set (configurable below), and convert them to JPEGs, storing them locally on your mac.  This can be used to include the JAP image pull images in your Control Pages.  Variables will be created to tell you where to find the image for each device.  Note: This will only happen for devices that are marked "in use" in the device properties, and images will only appear for Rx's and Tx's with image pull enabed.</Label>
 		</Field>
 
 
 		<Field id="image_pull" type="checkbox">
-				<Label>Enable automatic image pull for all devices:</Label>
+				<Label>Image pull client:</Label>
 		</Field>
 
 		<Field id="image_pull_dir_instruction" type="label" fontColor="darkgray" fontSize="small" alignWithControl="false">
@@ -21,7 +21,7 @@
 		</Field>
 
 		<Field type="menu" id="image_pull_refresh" enabledBindingId="image_pull" defaultValue="60">
-			<Label>Image pull refresh:</Label>
+			<Label>Image pull client refresh:</Label>
 			<List>
 				<Option value="30">30 seconds</Option>
 				<Option value="60">1 minute</Option>
