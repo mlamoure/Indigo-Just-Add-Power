@@ -119,11 +119,16 @@
 		        <ValueType>String</ValueType>
 		        <TriggerLabel>Being watched by</TriggerLabel>
 		        <ControlPageLabel>Being watched by</ControlPageLabel>
-		    </State>			
+		    </State>
 			<State id="being_watched_ui">
 		        <ValueType>String</ValueType>
 		        <TriggerLabel>Being watched by (long)</TriggerLabel>
 		        <ControlPageLabel>Being watched by (long)</ControlPageLabel>
+		    </State>
+			<State id="image_pull_enabled">
+		        <ValueType>Boolean</ValueType>
+		        <TriggerLabel>Image Pull Enabled</TriggerLabel>
+		        <ControlPageLabel>Image Pull Enabled</ControlPageLabel>
 		    </State>			
     	</States>
 	</Device>
@@ -183,6 +188,11 @@
 		        <ValueType>String</ValueType>
 		        <TriggerLabel>VLAN Watching</TriggerLabel>
 		        <ControlPageLabel>VLAN Watching (Long)</ControlPageLabel>
+		    </State>
+			<State id="image_pull_enabled">
+		        <ValueType>Boolean</ValueType>
+		        <TriggerLabel>Image Pull Enabled</TriggerLabel>
+		        <ControlPageLabel>Image Pull Enabled</ControlPageLabel>
 		    </State>			
     	</States>
 	</Device>

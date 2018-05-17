@@ -23,6 +23,9 @@
 		<Field type="menu" id="image_pull_refresh" enabledBindingId="image_pull" defaultValue="60">
 			<Label>Image pull client refresh:</Label>
 			<List>
+				<Option value="5">5 seconds</Option>
+				<Option value="10">10 seconds</Option>
+				<Option value="20">20 seconds</Option>
 				<Option value="30">30 seconds</Option>
 				<Option value="60">1 minute</Option>
 				<Option value="120">2 minutes</Option>

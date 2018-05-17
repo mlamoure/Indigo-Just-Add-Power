@@ -36,19 +36,19 @@
 				</List>
 			</Field>
 
-			<Field id="resolution" type="textfield" defaultValue="320">
+			<Field id="resolution" type="textfield" defaultValue="320" visibleBindingId="enableDisable" visibleBindingValue="enable">
 				<Label>Resolution:</Label>
 			</Field>
 
-			<Field type="menu" id="priority" defaultValue="1">
+			<Field type="menu" id="priority" defaultValue="1" visibleBindingId="enableDisable" visibleBindingValue="enable">
 				<Label>Priority:</Label>
 				<List>
 					<Option value="0">High</Option>
-					<Option value="1">Low</Option>
+					<Option value="1">Low (recommended)</Option>
 				</List>
 			</Field>
 
-			<Field id="rate" type="textfield" defaultValue="3">
+			<Field id="rate" type="textfield" defaultValue="3" visibleBindingId="enableDisable" visibleBindingValue="enable">
 				<Label>Frequency (seconds):</Label>
 			</Field>
 

@@ -134,12 +134,18 @@ class Plugin(indigo.PluginBase):
 			for Rx in matrix.Rx:
 				dev = self.getIndigoDevice(Rx)
 
+				Rx.friendlyname = dev.name
+
 				if dev is None:
 					pass
 
 				# Doing a little cleanup here.  It seems we wernt always saving this correctly.
 				if dev.pluginProps["ignore"]:
 					Rx.ignore = True
+
+				if Rx.ignore or not Rx.ImagePullEnabled():
+					self.logger.debug("not getting image from " + dev.name + " as device is ignored or image pull is disabled.")
+					pass
 
 				if not Rx.ignore:
 					result = self.getImage(Rx.image_pull_url, self.image_pull_dir + "/Rx" + str(Rx.no) + ".bmp")
@@ -150,7 +156,13 @@ class Plugin(indigo.PluginBase):
 			for Tx in matrix.Tx:
 				dev = self.getIndigoDevice(Tx)
 
+				Tx.friendlyname = dev.name
+
 				if dev is None:
+					pass
+
+				if Rx.ignore or not Tx.ImagePullEnabled():
+					self.logger.debug("not getting image from " + dev.name + " as device is ignored or image pull is disabled.")
 					pass
 
 				# Doing a little cleanup here.  It seems we wernt always saving this correctly.
@@ -222,7 +234,6 @@ class Plugin(indigo.PluginBase):
 					selMatrix = matrix
 					break
 
-
 			dev.updateStateOnServer(key="connectionState", value=str(selMatrix.is_Connected()))
 
 			if selMatrix.is_Connected():
@@ -238,39 +249,44 @@ class Plugin(indigo.PluginBase):
 			if selMatrix is None:
 				return
 
-			for Tx in selMatrix.Tx:
-				if Tx.ip == dev.pluginProps["ip"]:
-					being_watched_ui = str(Tx.being_watched)
-					if dev.states["being_watched"] != str(Tx.being_watched):
+			Tx = self.getJAPDevice(dev)
+			Tx.friendlyname = dev.name
 
-						if Tx.being_watched != "Not in use" and Tx.being_watched != "Unknown":
-							being_watched_ui = ""
+			if "ignore" in dev.pluginProps:
+				Tx.ignore = dev.pluginProps["ignore"]
 
-							for Rx in Tx.being_watched.strip().split(","):
+			being_watched_ui = str(Tx.being_watched)
+			if dev.states["being_watched"] != str(Tx.being_watched):
+
+				if Tx.being_watched != "Not in use" and Tx.being_watched != "Unknown":
+					being_watched_ui = ""
+
+					for Rx in Tx.being_watched.strip().split(","):
 #								self.logger.debug(dev.name + " update: looking for Rx. " + str(Rx.strip()))
-								for RxDev in [s for s in indigo.devices.iter(filter="self.receiver") if s.enabled]:
-									if RxDev.pluginProps["no"] == int(Rx.strip()) and not RxDev.pluginProps["ignore"]:
+						for RxDev in [s for s in indigo.devices.iter(filter="self.receiver") if s.enabled]:
+							if RxDev.pluginProps["no"] == int(Rx.strip()) and not RxDev.pluginProps["ignore"]:
 
-										if len(being_watched_ui) == 0:
-											being_watched_ui = "Rx. " + str(Rx) + " (" + RxDev.name + ")"
-										else:
-											being_watched_ui = being_watched_ui + ", Rx. " + str(Rx) + " (" + RxDev.name + ")"
-										break
+								if len(being_watched_ui) == 0:
+									being_watched_ui = "Rx. " + str(Rx) + " (" + RxDev.name + ")"
+								else:
+									being_watched_ui = being_watched_ui + ", Rx. " + str(Rx) + " (" + RxDev.name + ")"
+								break
 
-						# This will happen if all the Rx's are ignored that this Tx is watching
-						if len(being_watched_ui) == 0:
-							being_watched_ui = "Not in use"
-						
-						if not "ignore" in dev.pluginProps:
-							props = dev.pluginProps
-							props["ignore"] = False
-							dev.replacePluginPropsOnServer(props)
+				# This will happen if all the Rx's are ignored that this Tx is watching
+				if len(being_watched_ui) == 0:
+					being_watched_ui = "Not in use"
+				
+				if not "ignore" in dev.pluginProps:
+					props = dev.pluginProps
+					props["ignore"] = False
+					dev.replacePluginPropsOnServer(props)
 
-						if being_watched_ui != "Unknown" and not dev.pluginProps["ignore"]:
-							indigo.server.log(dev.name + " updated to now sending to " + being_watched_ui)
-						dev.updateStateOnServer(key="being_watched", value=Tx.being_watched)
-						dev.updateStateOnServer(key="being_watched_ui", value=being_watched_ui)
-					break
+				if being_watched_ui != "Unknown" and not dev.pluginProps["ignore"]:
+					indigo.server.log(dev.name + " updated to now sending to " + being_watched_ui)
+				
+				dev.updateStateOnServer(key="being_watched", value=Tx.being_watched)
+				dev.updateStateOnServer(key="being_watched_ui", value=being_watched_ui)
+				dev.updateStateOnServer(key="image_pull_enabled", value=Tx.ImagePullEnabled())
 
 		elif dev.deviceTypeId == "receiver" and "matrix" in dev.pluginProps:
 			matrixDev = indigo.devices[dev.pluginProps["matrix"]]
@@ -280,29 +296,29 @@ class Plugin(indigo.PluginBase):
 			if selMatrix is None:
 				return
 
-			for Rx in selMatrix.Rx:
-				if Rx.ip == dev.pluginProps["ip"]:
-					if dev.pluginProps["ignore"]:
-						vlan_watching_ui = "Not in use"
-						vlan_watching = ""
-						dev.updateStateOnServer(key="vlan_watching", value=Rx.vlan_watching)
-						dev.updateStateOnServer(key="vlan_watching_ui", value=vlan_watching_ui)
+			Rx = self.getJAPDevice(dev)
+			Rx.friendlyname = dev.name
 
-					elif str(dev.states["vlan_watching"]) != str(Rx.vlan_watching):
-						vlan_watching_ui = "unknown"
-						if Rx.vlan_watching != "Unknown":
-							for TxDev in [s for s in indigo.devices.iter(filter="self.transmitter") if s.enabled]:
-								if TxDev.pluginProps["vlan"] == Rx.vlan_watching:
-									vlan_watching_ui = "VLAN " + str(Rx.vlan_watching) + " (" + TxDev.name + ")"
-									break
+			if dev.pluginProps["ignore"]:
+				vlan_watching_ui = "Not in use"
+				vlan_watching = ""
+				dev.updateStateOnServer(key="vlan_watching", value=Rx.vlan_watching)
+				dev.updateStateOnServer(key="vlan_watching_ui", value=vlan_watching_ui)
 
-							if not dev.pluginProps["ignore"]:
-								indigo.server.log(dev.name + " updated to now watching " + vlan_watching_ui)
+			elif str(dev.states["vlan_watching"]) != str(Rx.vlan_watching):
+				vlan_watching_ui = "unknown"
+				if Rx.vlan_watching != "Unknown":
+					for TxDev in [s for s in indigo.devices.iter(filter="self.transmitter") if s.enabled]:
+						if TxDev.pluginProps["vlan"] == Rx.vlan_watching:
+							vlan_watching_ui = "VLAN " + str(Rx.vlan_watching) + " (" + TxDev.name + ")"
+							break
 
-						dev.updateStateOnServer(key="vlan_watching", value=Rx.vlan_watching)
-						dev.updateStateOnServer(key="vlan_watching_ui", value=vlan_watching_ui)
+					if not dev.pluginProps["ignore"]:
+						indigo.server.log(dev.name + " updated to now watching " + vlan_watching_ui)
 
-					break
+				dev.updateStateOnServer(key="vlan_watching", value=Rx.vlan_watching)
+				dev.updateStateOnServer(key="vlan_watching_ui", value=vlan_watching_ui)
+				dev.updateStateOnServer(key="image_pull_enabled", value=Rx.ImagePullEnabled())
 
 		self.logger.debug("Completed state update for " + dev.name)
 
@@ -330,7 +346,8 @@ class Plugin(indigo.PluginBase):
 			if indigo.devices[int(pluginAction.props["device"])].pluginProps["ip"] == JAPDevice.ip:
 				device = JAPDevice
 
-		device.reboot()
+		if device.reboot():
+			indigo.server.log("rebooted " + device.friendlyname)
 		
 	def rebootSwitch(self, pluginAction, dev):
 		for matrix in self.matrixList:
@@ -345,16 +362,21 @@ class Plugin(indigo.PluginBase):
 			self.logger.error("error while executing the action")
 			return
 
-		device = self.getJAPDevice(indigo.devices[int(pluginAction.props["device"])].pluginProps["ip"])
+		device = self.getJAPDevice(indigo.devices[int(pluginAction.props["device"])])
 
 		if device is None:
 			self.logger.error("error while executing the action")
 			return
 
 		if pluginAction.props["enableDisable"] == "enable":
-			device.enableImagePull(pluginAction.props["resolution"], pluginAction.props["priority"], pluginAction.props["rate"])
+			if device.enableImagePull(pluginAction.props["resolution"], pluginAction.props["priority"], pluginAction.props["rate"]):
+					indigo.server.log("enabled imagepull for " + device.friendlyname)				
 		else:
-			device.disableImagePull()
+			if device.ImagePullEnabled():
+				if device.disableImagePull():
+					indigo.server.log("disabled imagepull for " + device.friendlyname)
+			else:
+				self.logger.error("image pull is already disabled for " + device.friendlyname + ", ignoring")
 
 
 	def switch(self, pluginAction, dev):
@@ -429,7 +451,6 @@ class Plugin(indigo.PluginBase):
 			matrix_dev = self.getIndigoDevice(matrix)
 
 			if matrix_dev is None:
-				self.logger.error("error while searching for the matrix in UpdateDevices")
 				return
 
 			for Rx in matrix.Rx:

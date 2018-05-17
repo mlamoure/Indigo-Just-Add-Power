@@ -1,6 +1,12 @@
+import indigo
+
 import socket
 import telnetlib
 import time
+import datetime
+
+GLOBAL_TIMEOUT = 3
+IMAGE_PULL_UPDATE_FREQUENCY = 24
 
 class JAPDevice(object):
 	def __init__(self, vlan, ip, logger, L2Debug):
@@ -10,77 +16,117 @@ class JAPDevice(object):
 		self.L2Debug = L2Debug
 		self.connection = None
 		self.image_pull_url = "http://" + self.ip + "/pull.bmp"
+		self._image_pull_enabled = None
+		self.friendlyname = ip
+		self.ignore = False
+		self._quietConnectionAttempts = False
 
 	def _sendCommand(self, cmd):
-		if not self.is_Connected():
-			self.logger.debug("was not connected, connecting...")
-			self._connect()
-
 		try:
+			self._connect()
 			self.logger.debug(u"Sending command:  %s" % cmd)
 			cmdsend = cmd + "\r\n"
 			self.connection.write(str(cmdsend))
-			self.logger.debug(self.connection.read_until("#"))
-			self.logger.info(cmd + " command was sucessfull")
+			output = self.connection.read_until("#", GLOBAL_TIMEOUT)
+			self.logger.debug(output)
+			self.connection.write("exit")
+			self.connection.close()
 			self.connection = None
+
+			return output
 		except:
 			self.logger.error("problem sending command")
 
-	def is_Connected(self):
-		if self.connection is None:
+	def ImagePullEnabled(self):
+		if self.ignore:
 			return False
 
-		try:
-			self.connection.write("\r\n")
+		if self._image_pull_enabled is None or self._image_pull_refresh < datetime.datetime.now()-datetime.timedelta(hours=IMAGE_PULL_UPDATE_FREQUENCY):
+			self.loadImagePull()
 
-			output_test = self.connection.read_until("#")
+		return self._image_pull_enabled
 
-			self.logger.debug(output_test)
+	def loadImagePull(self):
+		output = self._sendCommand("astparam dump")
 
-			return True
-		except:
+		if output is None:
 			return False
 
-		return False
+		for astparam_output in output.splitlines():
+			if "pull_on_boot" in astparam_output:
+				self._image_pull_enabled = astparam_output[13] != "n"
+
+				if self._image_pull_enabled:
+					self.image_pull_res = astparam_output[13:].split("_")[0]
+					self.image_pull_prior = astparam_output[13:].split("_")[1]
+					self.image_pull_rate = astparam_output[13:].split("_")[2]
+
+					if self.image_pull_prior == "1":
+						prior = "low"
+					else:
+						prior = "high"
+				else:
+					self.image_pull_res = None
+					self.image_pull_prior = None
+					self.image_pull_rate = None
+
+		if self._image_pull_enabled:
+			indigo.server.log("loaded from device " + self.friendlyname + " that image pull is enabled (res: " + self.image_pull_res + ", priority: " + prior + ", rate: " + self.image_pull_rate + " secs)")
+		else:
+			indigo.server.log("loaded from device " + self.friendlyname + " that image pull is disabled")
+
+		self._image_pull_refresh = datetime.datetime.now()
 
 	def enableImagePull(self, res=320, prior=1, rate=3):
 		self.logger.debug("enabling image pull")
 
-		command = "astparam s pull_on_boot " + str(res) + "_" + str(prior) + "_" + str(rate) + ";astparam save;reboot "
+		command = "astparam s pull_on_boot " + str(res) + "_" + str(prior) + "_" + str(rate) + ";astparam save;reboot"
 
-		self.logger.debug("sending command: " + command)
 		self._sendCommand(command)
+
+		self.image_pull_res = res
+		self.image_pull_prior = prior
+		self.image_pull_rate = rate
+
+		self._image_pull_enabled = True
+		self._image_pull_refresh = datetime.datetime.now()
+
+		return True
 
 	def disableImagePull(self):
 		self.logger.debug("disabling image pull")
 
-		command = "astparam s pull_on_boot n;astparam save;reboot "
+		command = "astparam s pull_on_boot n;astparam save;reboot"
 
-		self.logger.debug("sending command:" + command)
 		self._sendCommand(command)
+		self._image_pull_enabled = False
+		self._image_pull_refresh = datetime.datetime.now()		
+
+		self.image_pull_res = None
+		self.image_pull_prior = None
+		self.image_pull_rate = None
+		
+		return True		
 
 	def reboot(self):
 		command = "reboot"
 
 		self._sendCommand(command)
 
+		return True
+
 	def _connect(self):
-		isConnectedRetry = 0
-		while not self.is_Connected():
-			isConnectedRetry += 1
+		try:
+			self.logger.info(u"Connecting to " + self.friendlyname + " (via IP:  %s" % self.ip + ")")
+			self.connection = telnetlib.Telnet(self.ip, 23)
+			output = self.connection.read_until("#", GLOBAL_TIMEOUT)
+			self.logger.debug(output)
 
-			if isConnectedRetry > 10:
-				self.logger.debug("Maximum number of connection retries has occured.")
-				return
+			time.sleep(3)
 
-			try:
-				self.logger.info(u"Connecting to JAP Device via IP  %s" % self.ip)
-				self.connection = telnetlib.Telnet(self.ip, 23)
-				time.sleep(3)
-
-			except:
-				self.logger.exception("Connection attempt failed. %s" % e.message)
-				time.sleep(5)
+		except:
+			self.logger.exception("Connection attempt failed. %s" % e.message)
+			time.sleep(5)
 
 		self.logger.debug("Connected")
 
@@ -147,7 +193,7 @@ class JustAddPowerMatrix(object):
 		self._sendCommand(command)
 		self._sendCommand("end")
 
-		output = self.connection.read_until("#")
+		output = self.connection.read_until("#", GLOBAL_TIMEOUT)
 
 		if self.L2Debug:
 			self.logger.debug(output)
@@ -169,29 +215,27 @@ class JustAddPowerMatrix(object):
 		if not self.isConfigured():
 			return
 
-		self.timeout = 1
-
 		try:
 			self.logger.info(u"Connecting to switch via IP to %s" % self.ip)
 			self.connection = telnetlib.Telnet(self.ip, 23)
 			time.sleep(3)
 
 
-			a = self.connection.read_until("User Name:", self.timeout)
+			a = self.connection.read_until("User Name:", GLOBAL_TIMEOUT)
 			self.logger.debug(u"Telnet: %s" % a)
 
 			if 'User' in a:
 				self.logger.debug(u"Sending username.")
 				self.connection.write(str(self.login) + "\r\n")
 
-				a = self.connection.read_until("Password:", self.timeout)
+				a = self.connection.read_until("Password:", GLOBAL_TIMEOUT)
 				self.logger.debug(u"Telnet: %s" % a)
 
 				if 'Password' in a:
 					self.logger.debug(u"Sending password.")
 					self.connection.write(str(self.password) + "\r\n")
 
-					a = self.connection.read_until("#")
+					a = self.connection.read_until("#", GLOBAL_TIMEOUT)
 					self.logger.debug(u"Telnet: %s" % a)
 
 				else:
@@ -216,7 +260,7 @@ class JustAddPowerMatrix(object):
 
 		try:
 			self._sendCommand("show vlan")
-			vlan_output = self.connection.read_until("#")
+			vlan_output = self.connection.read_until("#", GLOBAL_TIMEOUT)
 			if self.L2Debug:
 				self.logger.debug(vlan_output)
 		except:
@@ -243,7 +287,6 @@ class JustAddPowerMatrix(object):
 						break
 
 				self.logger.debug("Evaluating VLAN " + str(vlan_no))
-
 
 				for port in vlan.split()[untaggedcolumn].split(","):
 					if "-" in port:
@@ -299,62 +342,15 @@ class JustAddPowerMatrix(object):
 
 		self.logger.debug("finished device update")
 
-
-# DEPRECIATED THIS BECAUSE IT IS LESS EFFICIENT THAN PULLING FROM THE SHOW VLAN COMMAND
-	def _unused_updatePorts(self):
-		self.logger.debug("starting port refresh")
-
-		for dev in self.Tx:
-			dev.being_watched = "Not in use"
-
-		for dev in self.Rx:
-			self.connection.read_eager()
-			self._sendCommand("show int sw gi" + str(dev.port) + "\r\n")
-			port_output = self.connection.read_until("Port is member in:")
-			if self.L2Debug:
-				self.logger.debug(port_output)
-			port_output = self.connection.read_until("Forbidden")
-			if self.L2Debug:
-				self.logger.debug(port_output)
-
-			for vlan in port_output.splitlines():
-				vlan_no = 10
-
-				try:
-					vlan_no = vlan.split()[0]
-					vlan_no = int(vlan_no)
-				except:
-					continue
-
-				if vlan_no < 11:
-					continue
-				else:
-					self.logger.debug("Found that Rx " + str(dev.no) + " is watching VLAN " + str(vlan_no))
-					dev.vlan_watching = vlan_no
-
-					for TxDev in self.Tx:
-						if TxDev.vlan == vlan_no:
-							self.logger.debug("Found that Tx " + str(TxDev.no) + " is being watched by Rx " + str(dev.no))
-
-							if TxDev.being_watched == "Not in use":
-								TxDev.being_watched = str(dev.no)
-							else:
-								TxDev.being_watched = TxDev.being_watched + ", " + str(dev.no)								
-							
-							break
-
-		self.logger.debug("finished device update")
-
-
 	def _loadConfiguration(self):
 		self.logger.debug("starting VLAN processing")
 		self._sendCommand("show vlan")
-		vlan_output = self.connection.read_until("#")
+		vlan_output = self.connection.read_until("#", GLOBAL_TIMEOUT)
 		if self.L2Debug:
 			self.logger.debug(vlan_output)
 
 		self._sendCommand("show ip int")
-		ip_int = self.connection.read_until("#")
+		ip_int = self.connection.read_until("#", GLOBAL_TIMEOUT)
 		self.logger.debug(ip_int)
 
 		for vlan in vlan_output.splitlines():
@@ -428,7 +424,7 @@ class JustAddPowerMatrix(object):
 		command = "reload"
 
 		self._sendCommand(command)
-		self.logger.debug(self.connection.read_until("#"))
+		self.logger.debug(self.connection.read_until("#", GLOBAL_TIMEOUT))
 
 	def is_Connected(self):
 		if self.connection is None:
@@ -437,7 +433,7 @@ class JustAddPowerMatrix(object):
 		try:
 			self.connection.write("\r\n")
 
-			output_test = self.connection.read_until("#")
+			output_test = self.connection.read_until("#", GLOBAL_TIMEOUT)
 
 			if self.L2Debug:
 				self.logger.debug(output_test)
