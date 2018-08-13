@@ -31,6 +31,7 @@ class Plugin(indigo.PluginBase):
 		self.image_pull = pluginPrefs.get("image_pull", False)
 		self.image_pull_dir = pluginPrefs.get("image_pull_dir", "")
 		self.image_pull_refresh = pluginPrefs.get("image_pull_refresh", 10)
+		self.firmware = pluginPrefs.get("firmware", "A")
 
 		if self.image_pull:
 			self.pollingInterval = self.image_pull_refresh
@@ -140,7 +141,7 @@ class Plugin(indigo.PluginBase):
 		self.debugLog(u"deviceStartComm: %s" % (dev.name,))
 
 		if dev.deviceTypeId == "matrix":
-			self.matrixList.append(JustAddPowerMatrix(dev.pluginProps["Model"], dev.pluginProps["ip"], dev.pluginProps["Login"], dev.pluginProps["Password"], dev.pluginProps["ControlVLAN"], self.logger, self.L2Debug))
+			self.matrixList.append(JustAddPowerMatrix(dev.pluginProps["Model"], dev.pluginProps["ip"], dev.pluginProps["Login"], dev.pluginProps["Password"], dev.pluginProps["ControlVLAN"], self.firmware, self.logger, self.L2Debug))
 			self.updateDevices()
 
 			if len(dev.address) < 2:

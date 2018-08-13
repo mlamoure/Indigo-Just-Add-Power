@@ -4,12 +4,14 @@ import socket
 import telnetlib
 import time
 import datetime
+import requests
 
 GLOBAL_TIMEOUT = 3
 IMAGE_PULL_UPDATE_FREQUENCY = 24
+REST_WAIT_TIME = 4
 
 class JAPDevice(object):
-	def __init__(self, vlan, ip, logger, L2Debug):
+	def __init__(self, vlan, ip, firmware, logger, L2Debug):
 		self.vlan = vlan
 		self.ip = ip
 		self.logger = logger
@@ -20,6 +22,7 @@ class JAPDevice(object):
 		self.friendlyname = ip
 		self.ignore = False
 		self._quietConnectionAttempts = False
+		self.firmware = firmware
 
 	def _sendCommand(self, cmd):
 		try:
@@ -40,80 +43,149 @@ class JAPDevice(object):
 	def ImagePullEnabled(self):
 		if self.ignore:
 			return False
-
-		if self._image_pull_enabled is None or self._image_pull_refresh < datetime.datetime.now()-datetime.timedelta(hours=IMAGE_PULL_UPDATE_FREQUENCY):
+		try:
+			if self._image_pull_enabled is None or self._image_pull_refresh < datetime.datetime.now()-datetime.timedelta(hours=IMAGE_PULL_UPDATE_FREQUENCY):
+				self.loadImagePull()
+		except:
 			self.loadImagePull()
 
 		return self._image_pull_enabled
 
 	def loadImagePull(self):
-		output = self._sendCommand("astparam dump")
+		if self.firmware == "A":
+			output = self._sendCommand("astparam dump")
 
-		if output is None:
-			return False
+			if output is None:
+				return False
 
-		for astparam_output in output.splitlines():
-			if "pull_on_boot" in astparam_output:
-				self._image_pull_enabled = astparam_output[13] != "n"
+			for astparam_output in output.splitlines():
+				if "pull_on_boot" in astparam_output:
+					self._image_pull_enabled = astparam_output[13] != "n"
 
-				if self._image_pull_enabled:
-					self.image_pull_res = astparam_output[13:].split("_")[0]
-					self.image_pull_prior = astparam_output[13:].split("_")[1]
-					self.image_pull_rate = astparam_output[13:].split("_")[2]
+					if self._image_pull_enabled:
+						self.image_pull_res = astparam_output[13:].split("_")[0]
+						self.image_pull_prior = astparam_output[13:].split("_")[1]
+						self.image_pull_rate = astparam_output[13:].split("_")[2]
 
-					if self.image_pull_prior == "1":
-						prior = "low"
+						if self.image_pull_prior == "1":
+							self.image_pull_prior = "low"
+						else:
+							self.image_pull_prior = "high"
 					else:
-						prior = "high"
-				else:
-					self.image_pull_res = None
-					self.image_pull_prior = None
-					self.image_pull_rate = None
+						self.image_pull_res = None
+						self.image_pull_prior = None
+						self.image_pull_rate = None
+
+		elif self.firmware == "B":
+			r = requests.get("http://" + self.ip + "/cgi-bin/api/settings/imagepull")
+
+			if type(r.json()["data"]) is bool:
+				self._image_pull_enabled = r.json()["data"] != False
+			elif type(r.json()["data"]) is dict:
+				self._image_pull_enabled = True
+
+			if self._image_pull_enabled:
+				self.image_pull_res = int(r.json()["data"]["width"])
+				self.image_pull_prior = r.json()["data"]["priority"]
+				self.image_pull_rate = int(r.json()["data"]["frequency"])
 
 		if self._image_pull_enabled:
-			indigo.server.log("loaded from device " + self.friendlyname + " that image pull is enabled (res: " + self.image_pull_res + ", priority: " + prior + ", rate: " + self.image_pull_rate + " secs)")
+			indigo.server.log("loaded from device " + self.friendlyname + " that image pull is enabled (res: " + str(self.image_pull_res) + ", priority: " + str(self.image_pull_prior) + ", rate: " + str(self.image_pull_rate) + " secs)")
 		else:
 			indigo.server.log("loaded from device " + self.friendlyname + " that image pull is disabled")
 
 		self._image_pull_refresh = datetime.datetime.now()
 
+	def save(self):
+		if self.firmware == "A":
+			command = "astparam save"
+
+			return self._sendCommand(command)
+
+		elif self.firmware == "B":
+			r = requests.post("http://" + self.ip + "/cgi-bin/api/command/device", data="save")
+			indigo.server.log(self.friendlyname + ": save command sent.  response code: " + str(r.status_code) + ", response: " + r.text)
+
+			return r.status_code == requests.codes.ok
+
+		return False
+
 	def enableImagePull(self, res=320, prior=1, rate=3):
 		self.logger.debug("enabling image pull")
 
-		command = "astparam s pull_on_boot " + str(res) + "_" + str(prior) + "_" + str(rate) + ";astparam save;reboot"
+		if self.firmware == "A":
+			command = "astparam s pull_on_boot " + str(res) + "_" + str(prior) + "_" + str(rate) + ";astparam save;reboot"
 
-		self._sendCommand(command)
+			self._sendCommand(command)
 
-		self.image_pull_res = res
-		self.image_pull_prior = prior
-		self.image_pull_rate = rate
+			self.image_pull_res = res
+			self.image_pull_prior = prior
+			self.image_pull_rate = rate
+			self._image_pull_enabled = True
+	
+		elif self.firmware == "B":
+			data = "{\"width\":\"320\",\"priority\":\"low\",\"frequency\":\"3\"}"	
 
-		self._image_pull_enabled = True
+			r = requests.post("http://" + self.ip + "/cgi-bin/api/settings/imagepull", data=data)
+			indigo.server.log(self.friendlyname + ": enable image pull command sent.  response code: " + str(r.status_code) + ", response: " + r.text)
+
+			self._image_pull_enabled = r.status_code == requests.codes.ok
+
+			time.sleep(REST_WAIT_TIME)
+			self.save()
+			time.sleep(REST_WAIT_TIME)
+			self.reboot()
+
 		self._image_pull_refresh = datetime.datetime.now()
 
-		return True
+		return self._image_pull_enabled
 
 	def disableImagePull(self):
 		self.logger.debug("disabling image pull")
 
-		command = "astparam s pull_on_boot n;astparam save;reboot"
+		if self.firmware == "A":
 
-		self._sendCommand(command)
-		self._image_pull_enabled = False
-		self._image_pull_refresh = datetime.datetime.now()		
+			command = "astparam s pull_on_boot n;astparam save;reboot"
 
-		self.image_pull_res = None
-		self.image_pull_prior = None
-		self.image_pull_rate = None
-		
-		return True		
+			self._sendCommand(command)
+			self._image_pull_enabled = False
+			self._image_pull_refresh = datetime.datetime.now()		
+
+			self.image_pull_res = None
+			self.image_pull_prior = None
+			self.image_pull_rate = None
+			
+		elif self.firmware == "B":
+			data = "null"
+
+			r = requests.post("http://" + self.ip + "/cgi-bin/api/settings/imagepull", data=data)
+
+			indigo.server.log(self.friendlyname + ": disable image pull command sent.  response code: " + str(r.status_code) + ", response: " + r.text)
+			self._image_pull_enabled = r.status_code == requests.codes.ok
+
+			time.sleep(REST_WAIT_TIME)
+			self.save()
+			time.sleep(REST_WAIT_TIME)
+			self.reboot()
+
+		self._image_pull_refresh = datetime.datetime.now()
+		return not self._image_pull_enabled		
 
 	def reboot(self):
 		command = "reboot"
 
-		self._sendCommand(command)
+		if self.firmware == "A":
+			return self._sendCommand(command)
+		elif self.firmware == "B":
+			try:
+				r = requests.post("http://" + self.ip + "/cgi-bin/api/command/device", data=command, timeout=1)
+				indigo.server.log(self.friendlyname + ": reboot command sent.  response code: " + str(r.status_code) + ", response: " + r.text)
+			except:
+				return True
 
-		return True
+			return r.status_code == requests.codes.ok
+
+		return False
 
 	def _connect(self):
 		try:
@@ -131,8 +203,8 @@ class JAPDevice(object):
 		self.logger.debug("Connected")
 
 class JustAddPowerTransmitter(JAPDevice):
-	def __init__(self, vlan, ip, logger, L2Debug):
-		super(JustAddPowerTransmitter, self).__init__(vlan, ip, logger, L2Debug)
+	def __init__(self, vlan, ip, firmware, logger, L2Debug):
+		super(JustAddPowerTransmitter, self).__init__(vlan, ip, firmware, logger, L2Debug)
 
 #		self.vlan = int(vlan)
 #		self.ip = ip
@@ -142,8 +214,8 @@ class JustAddPowerTransmitter(JAPDevice):
 		self.being_watched = "Unknown"
 
 class JustAddPowerReceiver(JAPDevice):
-	def __init__(self, vlan, no, ip, port, logger, L2Debug):
-		super(JustAddPowerReceiver, self).__init__(vlan, ip, logger, L2Debug)
+	def __init__(self, vlan, no, ip, port, firmware, logger, L2Debug):
+		super(JustAddPowerReceiver, self).__init__(vlan, ip, firmware, logger, L2Debug)
 #		self.vlan = int(vlan)
 #		self.ip = ip
 
@@ -154,7 +226,7 @@ class JustAddPowerReceiver(JAPDevice):
 
 class JustAddPowerMatrix(object):
 	"""docstring for JustAddPowerMatrix"""
-	def __init__(self, model, ip, login, password, controlVLAN = 2, logger = None, L2Debug = False):
+	def __init__(self, model, ip, login, password, controlVLAN = 2, firmware = "A", logger = None, L2Debug = False):
 		super(JustAddPowerMatrix, self).__init__()
 		self.model = model
 		self.ip = ip
@@ -164,6 +236,7 @@ class JustAddPowerMatrix(object):
 		self.TxCount = 0
 		self.controlVLAN = controlVLAN
 		self.receiverVLAN = 10
+		self.firmware = firmware
 
 		self.Rx = []
 		self.Tx = []
@@ -198,7 +271,6 @@ class JustAddPowerMatrix(object):
 		if self.L2Debug:
 			self.logger.debug(output)
 
-
 	def _addReceiver(self, newRx):
 		self.Rx.append(newRx)
 		self.RxCount = self.RxCount + 1
@@ -210,6 +282,10 @@ class JustAddPowerMatrix(object):
 	def isConfigured(self):
 		return len(self.ip) > 0 and len(self.password) > 0 and len(self.login) > 0
 
+	def _reconnect(self):
+		self.connection	= None
+		self._connect()
+
 	def _connect(self):
 
 		if not self.isConfigured():
@@ -219,7 +295,6 @@ class JustAddPowerMatrix(object):
 			self.logger.info(u"Connecting to switch via IP to %s" % self.ip)
 			self.connection = telnetlib.Telnet(self.ip, 23)
 			time.sleep(3)
-
 
 			a = self.connection.read_until("User Name:", GLOBAL_TIMEOUT)
 			self.logger.debug(u"Telnet: %s" % a)
@@ -246,8 +321,8 @@ class JustAddPowerMatrix(object):
 			self.logger.info(u"Connected to switch")
 			self.logger.debug(u"End of connection process.")
 
-		except socket.error, e:
-			self.logger.exception(u"Unable to connect. %s" % e.message)
+		except Exception as e:
+			self.logger.debug(u"Unable to connect.  Error: %s" % e.message)
 
 	def updatePorts(self):
 		self.logger.debug("starting port refresh")
@@ -259,14 +334,24 @@ class JustAddPowerMatrix(object):
 			dev.vlan_watching = "Unknown"
 
 		try:
-			self._sendCommand("show vlan")
-			vlan_output = self.connection.read_until("#", GLOBAL_TIMEOUT)
-			if self.L2Debug:
-				self.logger.debug(vlan_output)
-		except:
-			self.logger.error("Error while refreshing VLAN status.")
-			return
+			vlan_output = ""
+			while len(vlan_output) < 10:
+				self._sendCommand("show vlan")
+				vlan_output = self.connection.read_until("#", GLOBAL_TIMEOUT)
+				if self.L2Debug:
+					self.logger.debug(vlan_output)
 
+				if len(vlan_output) < 10:
+					self._reconnect()
+
+		except Exception as e:
+			if not self._silence_errors:
+				self.logger.error("Error while refreshing VLAN status, silenced until reconnection attempts work.")
+				self.logger.debug("error: " + str(e))
+				self._silence_errors = True
+			return False
+
+		self._silence_errors = False
 		for vlan in vlan_output.splitlines():
 
 			try:
@@ -387,7 +472,7 @@ class JustAddPowerMatrix(object):
 						break
 
 				self.logger.debug("Adding Transmitter no. " + str(vlan_no - 10) + ", VLAN: " + str(vlan_no) + ", IP: " + tx_ip )
-				newTx = JustAddPowerTransmitter(vlan_no, tx_ip, self.logger, self.L2Debug)
+				newTx = JustAddPowerTransmitter(vlan_no, tx_ip, self.firmware, self.logger, self.L2Debug)
 				self._addTransmitter(newTx)
 
 
@@ -413,7 +498,7 @@ class JustAddPowerMatrix(object):
 					break
 
 			self.logger.debug("Adding Reciever no. " + str(self.RxCount + 1) + ", VLAN: " + str(vlan_no) + ", IP: " + rx_ip + ", Port: " + str(rx_port))
-			newRx = JustAddPowerReceiver(vlan_no, self.RxCount + 1, rx_ip, rx_port, self.logger, self.L2Debug)
+			newRx = JustAddPowerReceiver(vlan_no, self.RxCount + 1, rx_ip, rx_port, self.firmware, self.logger, self.L2Debug)
 			self._addReceiver(newRx)
 			rx_port = rx_port + 1
 
@@ -424,7 +509,14 @@ class JustAddPowerMatrix(object):
 		command = "reload"
 
 		self._sendCommand(command)
-		self.logger.debug(self.connection.read_until("#", GLOBAL_TIMEOUT))
+		time.sleep(1)
+		self._sendCommand("Y")
+		time.sleep(1)
+		self._sendCommand("Y")
+
+		answer = self.connection.read_eager()
+
+		self.logger.debug(answer)
 
 	def is_Connected(self):
 		if self.connection is None:
@@ -449,9 +541,9 @@ class JustAddPowerMatrix(object):
 			self.logger.debug(u"Sending network command:  %s" % cmd)
 			cmd = cmd + "\r\n"
 			self.connection.write(str(cmd))
-		except IOError:
+		except Exception as e:
 			self.logger.error("problem sending command, retrying...")
-			self._connect()
+			self._reconnect()
 			self.logger.debug(u"Sending network command:  %s" % cmd)
 			cmd = cmd + "\r\n"
 			self.connection.write(str(cmd))

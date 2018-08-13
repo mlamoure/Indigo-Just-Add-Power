@@ -2,6 +2,18 @@
 <PluginConfig>
 	<SupportURL>https://github.com/mlamoure/</SupportURL>
 
+		<Field id="firmware_instruction" type="label" fontColor="darkgray" fontSize="small" alignWithControl="false">
+			<Label>Just Add Power is moving to a new firmware series called JustOS.  JustOS is ReST web-based, which avoids having to use telnet commands to control the Rx and TX devices.  This plugin was originally built pre-JustOS.  Support for the "A" firmware is now retired but the functionality that was previously built and tested remains remains available.</Label>
+		</Field>
+
+		<Field type="menu" id="firmware" defaultValue="B">
+			<Label>Firmware version:</Label>
+			<List>
+				<Option value="A">A6.X.X</Option>
+				<Option value="B">JustOS B1.X.X</Option>
+			</List>
+		</Field>
+
 		<Field id="image_pull_instruction" type="label" fontColor="darkgray" fontSize="small" alignWithControl="false">
 			<Label>When Image Pull Client is enabled, the plugin will download the images based on the refresh rate set (configurable below), and convert them to JPEGs, storing them locally on your mac.  This can be used to include the JAP image pull images in your Control Pages.  Variables will be created to tell you where to find the image for each device.  Note: This will only happen for devices that are marked "in use" in the device properties, and images will only appear for Rx's and Tx's with image pull enabed.</Label>
 		</Field>
