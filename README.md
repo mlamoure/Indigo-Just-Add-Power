@@ -3,6 +3,8 @@ Indigo (http://www.indigodomo.com) plugin for Just Add Power (www.justaddpower.c
 # Requirements #
 JAP Matrix with a Cisco Switch.  Luxul switches are not supported yet.
 
+Supports justOS firmware versions.  Legacy "A" firmware is still available but unsupported since I have no way of testing it.
+
 # Features #
 * Automatically detects Rx's and Tx's configured in your JAP matrix (though standard JADConfig setup)
 * Updates the state of each Rx and Tx.  Rx's display which VLAN they are on, and which Tx device is assigned to that VLAN.  Tx's display which Rx's are watching that source.  See the state table below.
