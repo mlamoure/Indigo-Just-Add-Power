@@ -408,9 +408,8 @@ class Plugin(indigo.PluginBase):
 	def switch(self, pluginAction, dev):
 		for matrix in self.matrixList:
 			if dev.pluginProps["ip"] == matrix.ip:
-
-				switchRx = self.getJAPDevice(indigo.devices[int(pluginAction.props["Rx"])].pluginProps["ip"])
-				switchTx = self.getJAPDevice(indigo.devices[int(pluginAction.props["Tx"])].pluginProps["ip"])
+				switchRx = self.getJAPDevice(indigo.devices[int(pluginAction.props["Rx"])])
+				switchTx = self.getJAPDevice(indigo.devices[int(pluginAction.props["Tx"])])
 
 				matrix.watch(switchRx, switchTx)
 				break

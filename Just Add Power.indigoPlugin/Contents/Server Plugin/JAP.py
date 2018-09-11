@@ -266,10 +266,12 @@ class JustAddPowerMatrix(object):
 		self._sendCommand(command)
 		self._sendCommand("end")
 
-		output = self.connection.read_until("#", GLOBAL_TIMEOUT)
+		self.connection.read_eager()
 
-		if self.L2Debug:
-			self.logger.debug(output)
+#		output = self.connection.read_until("#", GLOBAL_TIMEOUT)
+
+#		if self.L2Debug:
+#			self.logger.debug(output)
 
 	def _addReceiver(self, newRx):
 		self.Rx.append(newRx)
