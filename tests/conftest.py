@@ -123,7 +123,9 @@ class _DummyHandler(logging.Handler):
 
 
 class PluginBase:
-    def __init__(self, plugin_id, plugin_display_name, plugin_version, plugin_prefs, **kwargs):
+    def __init__(
+        self, plugin_id, plugin_display_name, plugin_version, plugin_prefs, **kwargs
+    ):
         self.pluginId = plugin_id
         self.pluginDisplayName = plugin_display_name
         self.pluginVersion = plugin_version
@@ -143,10 +145,24 @@ def _next_id(container):
     return max(container.keys(), default=1000) + 1
 
 
-def _create_device(protocol=None, address="", name="", description="", deviceTypeId="", props=None, folder=0):
+def _create_device(
+    protocol=None,
+    address="",
+    name="",
+    description="",
+    deviceTypeId="",
+    props=None,
+    folder=0,
+):
     dev_id = _next_id(indigo_stub.devices)
     folder_id = folder.id if isinstance(folder, Folder) else folder
-    dev = Device(dev_id, name=name, address=address, deviceTypeId=deviceTypeId, folderId=folder_id)
+    dev = Device(
+        dev_id,
+        name=name,
+        address=address,
+        deviceTypeId=deviceTypeId,
+        folderId=folder_id,
+    )
     dev.pluginProps = dict(props or {})
     indigo_stub.devices[dev_id] = dev
     indigo_stub.device.created.append(dev)
@@ -172,7 +188,9 @@ indigo_stub.devices = Devices()
 indigo_stub.devices.folders = Folders()
 indigo_stub.devices.folder = types.SimpleNamespace(create=_create_folder)
 indigo_stub.variables = Variables()
-indigo_stub.device = types.SimpleNamespace(create=_create_device, delete=_delete_device, created=[])
+indigo_stub.device = types.SimpleNamespace(
+    create=_create_device, delete=_delete_device, created=[]
+)
 indigo_stub.variable = types.SimpleNamespace()
 indigo_stub.kProtocol = types.SimpleNamespace(Plugin="Plugin")
 
