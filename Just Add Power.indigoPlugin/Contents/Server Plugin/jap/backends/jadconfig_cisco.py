@@ -53,7 +53,17 @@ _RELOAD_CONFIRM_RE = re.compile(rb"\(Y/N\)\[[YN]\] ?$")
 _PROMPT_RE = re.compile(rb"(?:^|[\r\n])[^\r\n]*?[>#] ?$")
 
 
+# `enable` is sent to guarantee privileged EXEC, but many JADConfig switches
+# log a level-15 user straight into privileged mode (prompt already "#"), where
+# `enable` returns "% Unrecognized command". That is harmless — the following
+# `configure` would fail with its own error if we were NOT privileged — so the
+# enable command's output is never treated as fatal.
+_LENIENT_COMMANDS = {"enable"}
+
+
 def _check_output(cmd: str, output: str) -> None:
+    if cmd in _LENIENT_COMMANDS:
+        return
     for line in output.splitlines():
         stripped = line.strip()
         lowered = stripped.lower()
