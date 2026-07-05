@@ -1,0 +1,21 @@
+show ip interface
+
+
+    IP Address        I/F    I/F Status  Type   Directed  Prec Redirect Status 
+                             admin/oper         Broadcast                      
+------------------ --------- ---------- ------- --------- ---- -------- ------ 
+10.66.4.3/24       vlan 2    UP/UP      Static  disable   No   enable   Valid  
+172.16.0.1/30      vlan 11   UP/UP      Static  disable   No   enable   Valid  
+172.16.0.5/30      vlan 12   UP/UP      Static  disable   No   enable   Valid  
+172.16.0.9/30      vlan 13   UP/UP      Static  disable   No   enable   Valid  
+172.16.0.13/30     vlan 14   UP/DOWN    Static  disable   No   enable   Valid  
+172.16.0.17/30     vlan 15   UP/DOWN    Static  disable   No   enable   Valid  
+172.16.0.21/30     vlan 16   UP/DOWN    Static  disable   No   enable   Valid  
+172.16.0.25/30     vlan 17   UP/DOWN    Static  disable   No   enable   Valid  
+172.16.0.29/30     vlan 18   UP/DOWN    Static  disable   No   enable   Valid  
+172.16.0.33/30     vlan 19   UP/DOWN    Static  disable   No   enable   Valid  
+172.16.0.37/30     vlan 20   UP/DOWN    Static  disable   No   enable   Valid  
+172.16.128.1/17    vlan 10   UP/UP      Static  disable   No   enable   Valid  
+192.168.98.2/24    vlan 1    UP/DOWN    Static  disable   No   enable   Valid  
+
+switch572434#

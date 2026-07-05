@@ -1,0 +1,20 @@
+show vlan
+Created by: D-Default, S-Static, G-GVRP, R-Radius Assigned VLAN, V-Voice VLAN
+
+Vlan       Name           Tagged Ports      UnTagged Ports      Created by    
+---- ----------------- ------------------ ------------------ ---------------- 
+ 1           1                                  Po2-8               V         
+ 2        CONTROL                          gi1,gi22-26,Po1          S         
+ 10      JAP_10x10                              gi2-21              S         
+ 11    TRANSMITTER_1                       gi2,gi12,gi15-21         S         
+ 12    TRANSMITTER_2                         gi3,gi13-14            S         
+ 13    TRANSMITTER_3                             gi4                S         
+ 14    TRANSMITTER_4                             gi5                S         
+ 15    TRANSMITTER_5                             gi6                S         
+ 16    TRANSMITTER_6                             gi7                S         
+ 17    TRANSMITTER_7                             gi8                S         
+ 18    TRANSMITTER_8                             gi9                S         
+ 19    TRANSMITTER_9                             gi10               S         
+ 20   TRANSMITTER_10                             gi11               S         
+
+switch572434#

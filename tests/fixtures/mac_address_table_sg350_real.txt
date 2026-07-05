@@ -1,0 +1,16 @@
+show mac address-table
+Flags: I - Internal usage VLAN
+Aging time is 300 sec
+
+    Vlan          Mac Address         Port       Type    
+------------ --------------------- ---------- ---------- 
+     1         00:87:31:57:24:34       0         self    
+     2         64:62:66:22:8b:7a      Po1      dynamic   
+     10        c2:00:00:01:d6:12      gi12     dynamic   
+     10        c2:00:00:01:d6:ff      gi14     dynamic   
+     10        c2:00:00:02:cc:13      gi13     dynamic   
+     11        c2:00:00:6c:32:db      gi2      dynamic   
+     12        c2:00:00:ae:9f:b6      gi3      dynamic   
+     13        c2:00:00:24:6e:5e      gi4      dynamic   
+
+switch572434#

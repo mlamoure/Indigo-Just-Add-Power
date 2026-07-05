@@ -1,0 +1,251 @@
+show running-config
+config-file-header
+switch572434
+v1.4.11.5 / R800_NIK_1_4_220_026
+CLI v1.0
+set system mode router 
+
+file SSD indicator encrypted
+@
+ssd-control-start
+ssd config
+ssd file passphrase control unrestricted
+no ssd file integrity control
+ssd-control-end REDACTED
+!
+spanning-tree pathcost method short
+port jumbo-frame
+bridge multicast filtering
+vlan database
+vlan 2,10-20
+exit
+voice vlan oui-table add 0001e3 Siemens_AG_phone________
+voice vlan oui-table add 00036b Cisco_phone_____________
+voice vlan oui-table add 00096e Avaya___________________
+voice vlan oui-table add 000fe2 H3C_Aolynk______________
+voice vlan oui-table add 0060b9 Philips_and_NEC_AG_phone
+voice vlan oui-table add 00d01e Pingtel_phone___________
+voice vlan oui-table add 00e075 Polycom/Veritel_phone___
+voice vlan oui-table add 00e0bb 3Com_phone______________
+bonjour interface range vlan 2,100
+hostname switch572434
+no logging console
+no passwords complexity enable
+passwords aging 0
+username cisco password encrypted REDACTED privilege 15
+ip ssh server
+no ip http server
+clock timezone " " -5
+clock summer-time web recurring usa
+clock source sntp
+sntp unicast client enable
+sntp unicast client poll
+sntp server 10.66.4.1 poll
+clock dhcp timezone
+ip telnet server
+!
+interface vlan 1
+ ip address 192.168.98.2 255.255.255.0
+ no ip address dhcp
+!
+interface vlan 2
+ name CONTROL
+ ip address 10.66.4.3 255.255.255.0
+!
+interface vlan 10
+ name JAP_10x10
+ ip address 172.16.128.1 255.255.128.0
+!
+interface vlan 11
+ name TRANSMITTER_1
+ ip address 172.16.0.1 255.255.255.252
+!
+interface vlan 12
+ name TRANSMITTER_2
+ ip address 172.16.0.5 255.255.255.252
+!
+interface vlan 13
+ name TRANSMITTER_3
+ ip address 172.16.0.9 255.255.255.252
+!
+interface vlan 14
+ name TRANSMITTER_4
+ ip address 172.16.0.13 255.255.255.252
+!
+interface vlan 15
+ name TRANSMITTER_5
+ ip address 172.16.0.17 255.255.255.252
+!
+interface vlan 16
+ name TRANSMITTER_6
+ ip address 172.16.0.21 255.255.255.252
+!
+interface vlan 17
+ name TRANSMITTER_7
+ ip address 172.16.0.25 255.255.255.252
+!
+interface vlan 18
+ name TRANSMITTER_8
+ ip address 172.16.0.29 255.255.255.252
+!
+interface vlan 19
+ name TRANSMITTER_9
+ ip address 172.16.0.33 255.255.255.252
+!
+interface vlan 20
+ name TRANSMITTER_10
+ ip address 172.16.0.37 255.255.255.252
+!
+interface gigabitethernet1
+ switchport mode general
+ switchport general allowed vlan add 2 untagged
+ switchport general pvid 2
+!
+interface gigabitethernet2
+ switchport mode general
+ switchport general allowed vlan add 10-11 untagged
+ switchport general pvid 11
+!
+interface gigabitethernet3
+ switchport mode general
+ switchport general allowed vlan add 10,12 untagged
+ switchport general pvid 12
+!
+interface gigabitethernet4
+ switchport mode general
+ switchport general allowed vlan add 10,13 untagged
+ switchport general pvid 13
+!
+interface gigabitethernet5
+ switchport mode general
+ switchport general allowed vlan add 10,14 untagged
+ switchport general pvid 14
+!
+interface gigabitethernet6
+ switchport mode general
+ switchport general allowed vlan add 10,15 untagged
+ switchport general pvid 15
+!
+interface gigabitethernet7
+ switchport mode general
+ switchport general allowed vlan add 10,16 untagged
+ switchport general pvid 16
+!
+interface gigabitethernet8
+ switchport mode general
+ switchport general allowed vlan add 10,17 untagged
+ switchport general pvid 17
+!
+interface gigabitethernet9
+ switchport mode general
+ switchport general allowed vlan add 10,18 untagged
+ switchport general pvid 18
+!
+interface gigabitethernet10
+ switchport mode general
+ switchport general allowed vlan add 10,19 untagged
+ switchport general pvid 19
+!
+interface gigabitethernet11
+ switchport mode general
+ switchport general allowed vlan add 10,20 untagged
+ switchport general pvid 20
+!
+interface gigabitethernet12
+ switchport mode general
+ switchport general allowed vlan add 10-11 untagged
+ switchport general pvid 10
+!
+interface gigabitethernet13
+ switchport mode general
+ switchport general allowed vlan add 10,12 untagged
+ switchport general pvid 10
+!
+interface gigabitethernet14
+ switchport mode general
+ switchport general allowed vlan add 10,12 untagged
+ switchport general pvid 10
+!
+interface gigabitethernet15
+ switchport mode general
+ switchport general allowed vlan add 10-11 untagged
+ switchport general pvid 10
+!
+interface gigabitethernet16
+ switchport mode general
+ switchport general allowed vlan add 10-11 untagged
+ switchport general pvid 10
+!
+interface gigabitethernet17
+ switchport mode general
+ switchport general allowed vlan add 10-11 untagged
+ switchport general pvid 10
+!
+interface gigabitethernet18
+ switchport mode general
+ switchport general allowed vlan add 10-11 untagged
+ switchport general pvid 10
+!
+interface gigabitethernet19
+ switchport mode general
+ switchport general allowed vlan add 10-11 untagged
+ switchport general pvid 10
+!
+interface gigabitethernet20
+ switchport mode general
+ switchport general allowed vlan add 10-11 untagged
+ switchport general pvid 10
+!
+interface gigabitethernet21
+ switchport mode general
+ switchport general allowed vlan add 10-11 untagged
+ switchport general pvid 10
+!
+interface gigabitethernet22
+ switchport mode general
+ switchport general allowed vlan add 2 untagged
+ switchport general pvid 2
+!
+interface gigabitethernet23
+ switchport mode general
+ switchport general allowed vlan add 2 untagged
+ switchport general pvid 2
+!
+interface gigabitethernet24
+ switchport mode general
+ switchport general allowed vlan add 2 untagged
+ switchport general pvid 2
+!
+interface gigabitethernet25
+ switchport mode general
+ switchport general allowed vlan add 2 untagged
+ switchport general pvid 2
+!
+interface gigabitethernet26
+ switchport mode general
+ switchport general allowed vlan add 2 untagged
+ switchport general pvid 2
+!
+interface gigabitethernet27
+ channel-group 1 mode auto
+ switchport mode general
+ switchport general pvid 4095
+!
+interface gigabitethernet28
+ channel-group 1 mode auto
+ switchport mode general
+ switchport general pvid 4095
+!
+interface Port-channel1
+ description Netgear
+ switchport trunk native vlan 2
+!
+exit
+ip igmp snooping
+ip igmp snooping vlan 2
+ip igmp snooping vlan 100
+ip igmp snooping vlan 110
+ip igmp snooping vlan 200
+no ip igmp snooping querier
+ip default-gateway 10.66.4.1
+switch572434#
