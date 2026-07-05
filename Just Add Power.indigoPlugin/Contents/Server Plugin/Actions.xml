@@ -27,12 +27,12 @@
 		<CallbackMethod>action_refresh_routing</CallbackMethod>
 	</Action>
 
-	<Action id="refreshImagePull" deviceFilter="self.japTransmitter,self.japReceiver">
+	<Action id="refreshImagePull" deviceFilter="self">
 		<Name>Refresh Image Pull</Name>
 		<CallbackMethod>action_refresh_image_pull</CallbackMethod>
 	</Action>
 
-	<Action id="rebootDevice" deviceFilter="self.japTransmitter,self.japReceiver">
+	<Action id="rebootDevice" deviceFilter="self">
 		<Name>Reboot JAP Device</Name>
 		<CallbackMethod>action_reboot_device</CallbackMethod>
 	</Action>
@@ -42,7 +42,7 @@
 		<CallbackMethod>action_reboot_switch</CallbackMethod>
 	</Action>
 
-	<Action id="enableImagePull" deviceFilter="self.japTransmitter,self.japReceiver">
+	<Action id="enableImagePull" deviceFilter="self">
 		<Name>Enable Image Pull</Name>
 		<CallbackMethod>action_enable_image_pull</CallbackMethod>
 		<ConfigUI>
@@ -65,7 +65,7 @@
 		</ConfigUI>
 	</Action>
 
-	<Action id="disableImagePull" deviceFilter="self.japTransmitter,self.japReceiver">
+	<Action id="disableImagePull" deviceFilter="self">
 		<Name>Disable Image Pull</Name>
 		<CallbackMethod>action_disable_image_pull</CallbackMethod>
 	</Action>
