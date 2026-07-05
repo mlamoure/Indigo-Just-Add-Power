@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<Actions>
+	<Action id="switchSource" deviceFilter="self.japReceiver">
+		<Name>Switch Source</Name>
+		<CallbackMethod>action_switch_source</CallbackMethod>
+		<ConfigUI>
+			<Field id="tx_vlan" type="menu">
+				<Label>Source (Transmitter):</Label>
+				<List class="self" method="tx_source_list" dynamicReload="true"/>
+			</Field>
+		</ConfigUI>
+	</Action>
+
+	<Action id="switchAllReceivers">
+		<Name>Switch All Receivers</Name>
+		<CallbackMethod>action_switch_all</CallbackMethod>
+		<ConfigUI>
+			<Field id="tx_vlan" type="menu">
+				<Label>Source (Transmitter):</Label>
+				<List class="self" method="tx_source_list" dynamicReload="true"/>
+			</Field>
+		</ConfigUI>
+	</Action>
+
+	<Action id="refreshRoutingState">
+		<Name>Refresh Routing State</Name>
+		<CallbackMethod>action_refresh_routing</CallbackMethod>
+	</Action>
+
+	<Action id="refreshImagePull" deviceFilter="self.japTransmitter, self.japReceiver">
+		<Name>Refresh Image Pull</Name>
+		<CallbackMethod>action_refresh_image_pull</CallbackMethod>
+	</Action>
+
+	<Action id="rebootDevice" deviceFilter="self.japTransmitter, self.japReceiver">
+		<Name>Reboot JAP Device</Name>
+		<CallbackMethod>action_reboot_device</CallbackMethod>
+	</Action>
+
+	<Action id="rebootSwitch" deviceFilter="self.japSwitch">
+		<Name>Reboot Switch</Name>
+		<CallbackMethod>action_reboot_switch</CallbackMethod>
+	</Action>
+
+	<Action id="enableImagePull" deviceFilter="self.japTransmitter, self.japReceiver">
+		<Name>Enable Image Pull</Name>
+		<CallbackMethod>action_enable_image_pull</CallbackMethod>
+		<ConfigUI>
+			<Field id="width" type="textfield" defaultValue="320">
+				<Label>Width (pixels):</Label>
+			</Field>
+			<Field id="priority" type="menu" defaultValue="low">
+				<Label>Priority:</Label>
+				<List>
+					<Option value="low">Low (recommended)</Option>
+					<Option value="high">High</Option>
+				</List>
+			</Field>
+			<Field id="frequency" type="textfield" defaultValue="3">
+				<Label>Refresh rate (seconds):</Label>
+			</Field>
+			<Field id="noteLabel" type="label" fontSize="small">
+				<Label>Note: the device saves the setting and reboots to apply it (~30 seconds of downtime).</Label>
+			</Field>
+		</ConfigUI>
+	</Action>
+
+	<Action id="disableImagePull" deviceFilter="self.japTransmitter, self.japReceiver">
+		<Name>Disable Image Pull</Name>
+		<CallbackMethod>action_disable_image_pull</CallbackMethod>
+	</Action>
+</Actions>

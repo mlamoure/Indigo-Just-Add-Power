@@ -95,6 +95,8 @@ class Device:
 
     def replacePluginPropsOnServer(self, props):
         self.pluginProps = dict(props)
+        if "address" in props:
+            self.address = props["address"]
 
     def replaceOnServer(self):
         pass

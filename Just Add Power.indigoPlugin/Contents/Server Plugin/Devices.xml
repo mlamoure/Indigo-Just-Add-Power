@@ -1,0 +1,136 @@
+<?xml version="1.0"?>
+<Devices>
+	<Device type="custom" id="japSwitch">
+		<Name>JAP Switch</Name>
+		<ConfigUI>
+			<Field id="infoLabel" type="label">
+				<Label>This device represents the Cisco switch that performs matrix switching. It is created automatically by discovery; configure the switch connection in the plugin's config dialog.</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="online">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Switch Online</TriggerLabel>
+				<ControlPageLabel>Switch Online</ControlPageLabel>
+			</State>
+			<State id="mode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>System Mode</TriggerLabel>
+				<ControlPageLabel>System Mode</ControlPageLabel>
+			</State>
+			<State id="model">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Switch Model</TriggerLabel>
+				<ControlPageLabel>Switch Model</ControlPageLabel>
+			</State>
+			<State id="lastStateSync">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last State Sync</TriggerLabel>
+				<ControlPageLabel>Last State Sync</ControlPageLabel>
+			</State>
+		</States>
+		<UiDisplayStateId>online</UiDisplayStateId>
+	</Device>
+
+	<Device type="custom" id="japTransmitter">
+		<Name>JAP Transmitter</Name>
+		<ConfigUI>
+			<Field id="infoLabel" type="label">
+				<Label>Transmitters are created automatically by discovery and identified by MAC address (or switch port), so you can rename this device freely. Port, VLAN, and IP are managed by the plugin.</Label>
+			</Field>
+			<Field id="ignore" type="checkbox" defaultValue="false">
+				<Label>Not in use:</Label>
+				<Description>Skip this transmitter in polling, source menus, and rediscovery.</Description>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="online">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Online</TriggerLabel>
+				<ControlPageLabel>Online</ControlPageLabel>
+			</State>
+			<State id="deviceName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Device Name</TriggerLabel>
+				<ControlPageLabel>Device Name</ControlPageLabel>
+			</State>
+			<State id="vlanId">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>VLAN</TriggerLabel>
+				<ControlPageLabel>VLAN</ControlPageLabel>
+			</State>
+			<State id="switchPort">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Switch Port</TriggerLabel>
+				<ControlPageLabel>Switch Port</ControlPageLabel>
+			</State>
+			<State id="firmwareVersion">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Firmware Version</TriggerLabel>
+				<ControlPageLabel>Firmware Version</ControlPageLabel>
+			</State>
+			<State id="imagePullUrl">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Image Pull URL</TriggerLabel>
+				<ControlPageLabel>Image Pull URL</ControlPageLabel>
+			</State>
+			<State id="watchedByCount">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Watched-By Count</TriggerLabel>
+				<ControlPageLabel>Watched-By Count</ControlPageLabel>
+			</State>
+		</States>
+		<UiDisplayStateId>watchedByCount</UiDisplayStateId>
+	</Device>
+
+	<Device type="custom" id="japReceiver">
+		<Name>JAP Receiver</Name>
+		<ConfigUI>
+			<Field id="infoLabel" type="label">
+				<Label>Receivers are created automatically by discovery and identified by MAC address (or switch port), so you can rename this device freely. Port and IP are managed by the plugin.</Label>
+			</Field>
+			<Field id="ignore" type="checkbox" defaultValue="false">
+				<Label>Not in use:</Label>
+				<Description>Skip this receiver in polling, Switch All Receivers, and rediscovery.</Description>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id="online">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Online</TriggerLabel>
+				<ControlPageLabel>Online</ControlPageLabel>
+			</State>
+			<State id="deviceName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Device Name</TriggerLabel>
+				<ControlPageLabel>Device Name</ControlPageLabel>
+			</State>
+			<State id="currentSource">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Current Source</TriggerLabel>
+				<ControlPageLabel>Current Source</ControlPageLabel>
+			</State>
+			<State id="currentSourceVlan">
+				<ValueType>Number</ValueType>
+				<TriggerLabel>Current Source VLAN</TriggerLabel>
+				<ControlPageLabel>Current Source VLAN</ControlPageLabel>
+			</State>
+			<State id="switchPort">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Switch Port</TriggerLabel>
+				<ControlPageLabel>Switch Port</ControlPageLabel>
+			</State>
+			<State id="firmwareVersion">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Firmware Version</TriggerLabel>
+				<ControlPageLabel>Firmware Version</ControlPageLabel>
+			</State>
+			<State id="imagePullUrl">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Image Pull URL</TriggerLabel>
+				<ControlPageLabel>Image Pull URL</ControlPageLabel>
+			</State>
+		</States>
+		<UiDisplayStateId>currentSource</UiDisplayStateId>
+	</Device>
+</Devices>

@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<MenuItems>
+	<MenuItem id="rediscover">
+		<Name>Rediscover System</Name>
+		<CallbackMethod>menu_rediscover</CallbackMethod>
+	</MenuItem>
+	<MenuItem id="printMatrix">
+		<Name>Print Routing Matrix to Event Log</Name>
+		<CallbackMethod>menu_print_matrix</CallbackMethod>
+	</MenuItem>
+	<MenuItem id="validateSystem">
+		<Name>Validate System</Name>
+		<CallbackMethod>menu_validate_system</CallbackMethod>
+	</MenuItem>
+</MenuItems>

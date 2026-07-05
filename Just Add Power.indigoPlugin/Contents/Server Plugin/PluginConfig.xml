@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<PluginConfig>
+	<Field id="switchLabel" type="label">
+		<Label>Cisco switch connection (SG300-family, telnet must be enabled with 'ip telnet server'):</Label>
+	</Field>
+	<Field id="switch_ip" type="textfield">
+		<Label>Switch IP address:</Label>
+	</Field>
+	<Field id="switch_username" type="textfield" defaultValue="cisco">
+		<Label>Username:</Label>
+	</Field>
+	<Field id="switch_password" type="textfield" defaultValue="cisco">
+		<Label>Password:</Label>
+	</Field>
+
+	<Field id="sep1" type="separator"/>
+
+	<Field id="vlanLabel" type="label">
+		<Label>JADConfig VLAN layout. Defaults match a standard JADConfig setup — only change these if your system was configured differently.</Label>
+	</Field>
+	<Field id="all_devices_vlan" type="textfield" defaultValue="10">
+		<Label>All-devices VLAN:</Label>
+	</Field>
+	<Field id="tx_vlan_range" type="textfield" defaultValue="11-410">
+		<Label>Transmitter VLAN range:</Label>
+	</Field>
+	<Field id="device_subnet" type="textfield">
+		<Label>Device subnet(s) (optional):</Label>
+	</Field>
+	<Field id="subnetNote" type="label" fontSize="small">
+		<Label>Comma-separated CIDR list (e.g. 172.16.0.0/24, 172.16.128.0/24) to narrow the discovery scan. Leave blank to derive from the switch's VLAN interfaces.</Label>
+	</Field>
+
+	<Field id="sep2" type="separator"/>
+
+	<Field id="routing_poll_secs" type="menu" defaultValue="30">
+		<Label>Routing state poll interval:</Label>
+		<List>
+			<Option value="15">15 seconds</Option>
+			<Option value="30">30 seconds</Option>
+			<Option value="60">60 seconds</Option>
+			<Option value="120">2 minutes</Option>
+		</List>
+	</Field>
+	<Field id="device_poll_secs" type="menu" defaultValue="60">
+		<Label>Device health poll interval:</Label>
+		<List>
+			<Option value="30">30 seconds</Option>
+			<Option value="60">60 seconds</Option>
+			<Option value="120">2 minutes</Option>
+			<Option value="300">5 minutes</Option>
+		</List>
+	</Field>
+
+	<Field id="sep3" type="separator"/>
+
+	<Field id="snapshots_enabled" type="checkbox" defaultValue="false">
+		<Label>Save image pull snapshots to disk:</Label>
+	</Field>
+	<Field id="snapshot_dir" type="textfield" visibleBindingId="snapshots_enabled" visibleBindingValue="true">
+		<Label>Snapshot directory:</Label>
+	</Field>
+	<Field id="snapshotNote" type="label" fontSize="small" visibleBindingId="snapshots_enabled" visibleBindingValue="true">
+		<Label>Leave blank to use the plugin's Preferences folder (snapshots/). BMP images are converted to JPEG when Pillow is available.</Label>
+	</Field>
+
+	<Field id="sep4" type="separator"/>
+
+	<Field id="log_level" type="menu" defaultValue="20">
+		<Label>Event log verbosity:</Label>
+		<List>
+			<Option value="5">Extra Debugging Messages</Option>
+			<Option value="10">Debugging Messages</Option>
+			<Option value="20">Informational Messages</Option>
+			<Option value="30">Warning Messages</Option>
+			<Option value="40">Error Messages</Option>
+			<Option value="50">Critical Errors Only</Option>
+		</List>
+	</Field>
+</PluginConfig>
