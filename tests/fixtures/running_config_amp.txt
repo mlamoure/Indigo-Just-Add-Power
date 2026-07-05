@@ -1,0 +1,33 @@
+show running-config
+config-file-header
+amp-switch
+CLI v1.0
+!
+vlan database
+vlan 100-140,200-201
+exit
+hostname amp-switch
+!
+interface vlan 100
+ name JAP_AMP_CONTROL
+ ip address 172.27.0.1 255.255.0.0
+!
+interface vlan 101
+ name JAP_AMP_TX_1
+ ip address 172.27.1.1 255.255.255.0
+!
+interface vlan 102
+ name JAP_AMP_TX_2
+ ip address 172.27.2.1 255.255.255.0
+!
+interface GigabitEthernet1
+ switchport mode general
+ switchport general allowed vlan add 100-101 untagged
+ switchport general pvid 101
+!
+interface GigabitEthernet2
+ switchport mode general
+ switchport general allowed vlan add 100,102 untagged
+ switchport general pvid 100
+!
+amp-switch#
