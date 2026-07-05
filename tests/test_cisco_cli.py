@@ -257,3 +257,41 @@ class TestLogging:
             client.run_command("show clock")
         assert "CLI >> 'show clock'" in caplog.text
         assert "CLI <<" in caplog.text
+
+
+class TestEnablePassword:
+    def test_password_prompt_answered_mid_sequence(self):
+        # A non-privilege-15 user gets "Password:" back from `enable`.
+        transport = FakeTransport(
+            preload=NO_AUTH_PRELOAD,
+            steps=NO_AUTH_STEPS
+            + [
+                Step(b"enable\r\n", [b"enable\r\nPassword:"]),
+                Step(b"secret\r\n", [b"\r\nswitch#"]),
+                command_step("configure", "", prompt="switch(config)#"),
+            ],
+        )
+        client = make_client(transport, username=None, password="secret")
+        outputs = client.run_commands(["enable", "configure"])
+        assert len(outputs) == 2
+        assert b"secret\r\n" in transport.sent
+        assert "switch(config)#" in outputs[1]
+
+
+class TestRunDialog:
+    def test_dialog_custom_expect_and_fire_forget(self):
+        import re
+
+        confirm_re = re.compile(rb"\(Y/N\)\[N\] ?$")
+        transport = FakeTransport(
+            preload=NO_AUTH_PRELOAD,
+            steps=NO_AUTH_STEPS
+            + [Step(b"reload\r\n", [b"reload\r\ncontinue ? (Y/N)[N] "])],
+        )
+        client = make_client(transport, username=None, password=None)
+        outputs = client.run_dialog(
+            [("reload", [confirm_re]), ("Y", None)]  # second step: fire-and-forget
+        )
+        assert "(Y/N)[N]" in outputs[0]
+        assert outputs[1] == ""
+        assert b"Y\r\n" in transport.sent

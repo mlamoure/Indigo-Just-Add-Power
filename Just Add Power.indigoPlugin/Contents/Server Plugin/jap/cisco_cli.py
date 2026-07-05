@@ -269,9 +269,38 @@ class CiscoCliClient:
         for cmd in cmds:
             self._buf = b""
             self._send_line(cmd)
-            self._read_until([PROMPT_RE], timeout or self._command_timeout, context=cmd)
+            m = self._read_until(
+                [PROMPT_RE, PASSWD_RE], timeout or self._command_timeout, context=cmd
+            )
+            if m.re is PASSWD_RE:
+                # Privilege escalation prompt (e.g. `enable` for a non-15 user):
+                # answer with the login password and wait for the real prompt.
+                self._send_line(self.password or "", mask=True)
+                self._read_until(
+                    [PROMPT_RE], timeout or self._command_timeout, context=cmd
+                )
             outputs.append(self._buf.decode("utf-8", errors="replace"))
         return outputs
+
+    def run_dialog(self, exchanges, *, timeout: float | None = None):
+        """Run a scripted dialog with NO reconnect-retry — for non-idempotent
+        flows like `reload` confirmation. `exchanges` is a list of
+        (line_to_send, expect_patterns) where expect_patterns is a list of
+        compiled byte regexes, or None to fire-and-forget. Returns the decoded
+        output for each exchange ('' for fire-and-forget steps)."""
+        with self._lock:
+            if self._transport is None:
+                self._connect()
+            outputs = []
+            for line, patterns in exchanges:
+                self._buf = b""
+                self._send_line(line)
+                if patterns:
+                    self._read_until(
+                        list(patterns), timeout or self._command_timeout, context=line
+                    )
+                outputs.append(self._buf.decode("utf-8", errors="replace"))
+            return outputs
 
     # -- internals -------------------------------------------------------------
 
