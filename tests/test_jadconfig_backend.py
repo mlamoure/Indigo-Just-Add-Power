@@ -81,6 +81,33 @@ class TestSwitch:
         with pytest.raises(BackendError, match="Bad VLAN list"):
             backend.switch(topo.find_by_port("gi12"), topo.find_by_port("gi2"))
 
+    def test_enable_unrecognized_is_tolerated(self):
+        # Production case: a level-15 login lands in privileged EXEC, so
+        # `enable` returns "% Unrecognized command". The switch is still
+        # reconfigured; this must NOT raise.
+        cli = FakeCli(
+            responses={
+                "enable": "enable\r\n% Unrecognized command\r\nswitch572434#",
+            }
+        )
+        topo = make_topology()
+        backend = make_backend(cli, topo)
+        backend.switch(topo.find_by_port("gi12"), topo.find_by_port("gi2"))
+        assert "enable" in cli.commands  # still sent, just not error-checked
+
+    def test_configure_error_still_raises_when_not_privileged(self):
+        # If we genuinely aren't privileged, `configure` fails and we catch it.
+        cli = FakeCli(
+            responses={
+                "enable": "enable\r\n% Unrecognized command\r\nswitch>",
+                "configure": "configure\r\n% Unrecognized command\r\nswitch>",
+            }
+        )
+        topo = make_topology()
+        backend = make_backend(cli, topo)
+        with pytest.raises(BackendError, match="configure"):
+            backend.switch(topo.find_by_port("gi12"), topo.find_by_port("gi2"))
+
     def test_missing_port_or_vlan(self):
         cli = FakeCli()
         topo = make_topology()
