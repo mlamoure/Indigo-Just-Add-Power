@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+.env
+
+# direnv
+.direnv/
+
+# IDE
+.idea/
+.vscode/
+.aider*
+
+# macOS
+.DS_Store
+
+# Plugin packaging artifacts
+Just Add Power.indigoPlugin/Contents/Packages*
+
+# Test artifacts
+.pytest_cache/

@@ -1,0 +1,5 @@
+# Development / test dependencies. The plugin itself is stdlib-only at runtime;
+# `requests` and `Pillow` are used opportunistically if the Indigo runtime
+# provides them (automatic fallbacks otherwise) and must NOT become hard deps.
+pytest~=8.4
+black~=25.1
