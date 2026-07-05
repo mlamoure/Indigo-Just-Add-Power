@@ -35,7 +35,9 @@ IMAGE_TIMEOUT = 5.0
 REBOOT_TIMEOUT = 1.0
 REST_WAIT_SECS = 4  # settle time between imagepull setting / save / reboot
 
-DETAILS_PATHS = ("/cgi-bin/api/details/device", "/details/device")
+# Live-verified 2026-07-05 on 3G B2.3.9: /cgi-bin/api/details/device answers;
+# the bare /details/device variant returns 404 on this firmware.
+DETAILS_PATHS = ("/cgi-bin/api/details/device",)
 
 
 class HttpTimeout(Exception):
@@ -151,7 +153,14 @@ class JustApiClient:
     # -- identity / liveness ---------------------------------------------------
 
     def get_details(self) -> DeviceDetails | None:
-        """Probe the details endpoint (exact path varies by firmware)."""
+        """Fetch device identity. Live-verified B2.3.9 shape (nested):
+
+            {"data": {"hostname": "JustAddPower-TX6C32DB", "model": "3G TX",
+                      "mode": "Transmitter",
+                      "network": {"mac": "C2:00:00:6C:32:DB", "ipaddress": ...},
+                      "firmware": {"version": "B2.3.9", ...}, ...}}
+
+        Flat fallbacks are kept for other firmware generations."""
         for path in DETAILS_PATHS:
             payload = self._get_json(path)
             if payload is None:
@@ -159,7 +168,12 @@ class JustApiClient:
             data = payload.get("data", payload) if isinstance(payload, dict) else None
             if not isinstance(data, dict):
                 continue
-            mac = _first_of(data, "mac", "macaddress", "mac_address")
+            network = (
+                data.get("network") if isinstance(data.get("network"), dict) else {}
+            )
+            mac = network.get("mac") or _first_of(
+                data, "mac", "macaddress", "mac_address"
+            )
             if mac is not None:
                 try:
                     mac = normalize_mac(str(mac))
@@ -167,9 +181,13 @@ class JustApiClient:
                     mac = None
             name = _first_of(data, "name", "hostname", "devicename", "web_name")
             model = _first_of(data, "model", "product", "device")
-            firmware = _first_of(
-                data, "firmware", "version", "fw_version", "sw_version"
-            )
+            firmware_field = data.get("firmware")
+            if isinstance(firmware_field, dict):
+                firmware = firmware_field.get("version")
+            else:
+                firmware = _first_of(
+                    data, "firmware", "version", "fw_version", "sw_version"
+                )
             return DeviceDetails(
                 mac=mac,
                 model=str(model) if model is not None else None,

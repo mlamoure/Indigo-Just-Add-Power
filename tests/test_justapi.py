@@ -3,7 +3,34 @@ import json
 from jap.justapi import HttpTimeout, JustApiClient
 from tests.helpers import FakeHttp
 
+# Live-captured shape from a 3G TX on B2.3.9 (2026-07-05), trimmed.
 DETAILS_B2 = json.dumps(
+    {
+        "data": {
+            "firmware": {
+                "date": "Wed, 05 Jul 2023 14:07:35 -0400",
+                "update": {"status": False},
+                "version": "B2.3.9",
+            },
+            "hostname": "JustAddPower-TX6C32DB",
+            "mode": "Transmitter",
+            "model": "3G TX",
+            "network": {
+                "gateway": "172.16.0.1",
+                "ipaddress": "172.16.0.2",
+                "mac": "C2:00:00:6C:32:DB",
+                "mtu": 8000,
+                "netmask": "255.255.0.0",
+                "speed": "1G",
+            },
+            "status": "No Video from Source",
+            "uuid": "d0409af6-9ef6-4389-81fe-18cef3bcf14d",
+        }
+    }
+).encode()
+
+# Hypothetical flat shape (other firmware generations) — fallback keys.
+DETAILS_FLAT = json.dumps(
     {
         "data": {
             "mac": "C2:00:00:6C:32:DB",
@@ -25,27 +52,28 @@ def make_client(http, **kwargs):
 
 
 class TestGetDetails:
-    def test_primary_path(self):
+    def test_real_b2_nested_shape(self):
         http = FakeHttp([(r"GET .*cgi-bin/api/details/device", 200, DETAILS_B2)])
+        details = make_client(http).get_details()
+        assert details.mac == "c2:00:00:6c:32:db"  # from data.network.mac
+        assert details.model == "3G TX"
+        assert details.device_name == "JustAddPower-TX6C32DB"
+        assert details.firmware == "B2.3.9"  # from data.firmware.version
+        assert details.raw["mode"] == "Transmitter"
+
+    def test_flat_shape_fallback_keys(self):
+        http = FakeHttp([(r"GET .*cgi-bin/api/details/device", 200, DETAILS_FLAT)])
         details = make_client(http).get_details()
         assert details.mac == "c2:00:00:6c:32:db"
         assert details.model == "VBS-HDIP-707POE"
         assert details.device_name == "Apple TV Tx"
         assert details.firmware == "B2.4.1"
-        assert details.raw["name"] == "Apple TV Tx"
 
-    def test_fallback_path_probed_in_order(self):
-        http = FakeHttp(
-            [
-                (r"GET http://172\.16\.0\.2/cgi-bin/api/details/device", 404, b"nope"),
-                (r"GET http://172\.16\.0\.2/details/device", 200, DETAILS_B2),
-            ]
-        )
-        details = make_client(http).get_details()
-        assert details is not None
+    def test_only_verified_path_probed(self):
+        http = FakeHttp([(r"GET .*", 404, b"nope")])
+        assert make_client(http).get_details() is None
         assert [c[1] for c in http.calls] == [
-            "http://172.16.0.2/cgi-bin/api/details/device",
-            "http://172.16.0.2/details/device",
+            "http://172.16.0.2/cgi-bin/api/details/device"
         ]
 
     def test_unreachable_returns_none(self):
