@@ -37,7 +37,8 @@ black .
 
 ## Production environment
 
-- Switch: Cisco **SG350** "SG350-av" @ `10.66.4.3` (SG300-family CLI), telnet, JADConfig-configured. TX devices on 172.16.0.x, RX on 172.16.128.x.
+- Switch: Cisco **SG300-28PP** @ `10.66.4.3` (the homelab MCP labels it "SG350-av" — that label is wrong; `show system` says SG300-28PP), telnet, JADConfig-configured. VLAN 10 = all-devices ("JAP_10x10"), TX VLANs 11–20 on ports gi2–gi11, RX ports gi12–gi21. TX device IPs in per-VLAN /30s under 172.16.0.0/24; RX devices in 172.16.128.0/17 (scan capped to /24). Real sanitized captures live in `tests/fixtures/*_real.txt`.
+- Measured: `show running-config` ≈ 11s, `show vlan` ≈ 0.7s — hence the show-vlan routing poll.
 - Deploy: `deploy_indigo_plugin_to_server.sh "Just Add Power.indigoPlugin" <repo-dir>` then `indigo-restart-plugin com.vtmikel.justaddpower` (see global CLAUDE.md). Check `…/Logs/com.vtmikel.justaddpower/plugin.log`, not Events.txt.
 - Legacy cleanup plan and cutover checklist: see the approved plan (legacy devices/action groups/variables on the prod server must be re-pointed/removed at cutover).
 

@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<html><head><title>Error</title></head>
+<body>
+<h1>502 Bad Gateway</h1>
+<p>This is not a switch. interface something % invalid.</p>
+\x00\x01\xff binary noise follows: PK\x03\x04 garbage garbage
+switchport general pvid banana
+vlan database corrupt
+</body></html>

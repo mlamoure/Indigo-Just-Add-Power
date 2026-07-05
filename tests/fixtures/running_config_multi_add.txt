@@ -1,0 +1,18 @@
+show running-config
+vlan database
+vlan 10-12
+exit
+!
+interface gigabitethernet1
+ switchport mode general
+ switchport general allowed vlan add 10 untagged
+ switchport general allowed vlan add 11 untagged
+ switchport general pvid 11
+!
+interface gigabitethernet2
+ switchport mode general
+ switchport general allowed vlan add 10 untagged
+ switchport general allowed vlan add 12 untagged
+ switchport general pvid 10
+!
+sw#
