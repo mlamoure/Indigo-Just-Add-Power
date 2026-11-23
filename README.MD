@@ -65,3 +65,7 @@ Routing state is polled (default 30s) and reflects changes made by **any** contr
 ## Development
 
 See `CLAUDE.md` for architecture, testing (197 pytest tests against a stubbed `indigo` module, scripted telnet transport, and real sanitized switch captures), and deploy workflow.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
